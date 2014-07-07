@@ -1,3 +1,5 @@
+__import__('pkg_resources').declare_namespace(__name__)
+
 from os import environ
 
 from flask import Flask
