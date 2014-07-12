@@ -8,6 +8,12 @@ from hoops.status import library as status
 # from models.core import PartnerAPIKey
 
 
+# TODO: support a mechanism for specifying how the oauth keys will be loaded
+# e.g.
+#   1. User passes in the keys to authorize against
+#   2. User passes in functions to invoke to get keys
+#   3. User passes in a table/model with a specific schema
+
 OAUTH_PARAMS = (
     'oauth_consumer_key',
     'oauth_consumer_secret',

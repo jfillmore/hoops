@@ -25,6 +25,10 @@ error_map = {
 }
 
 
+class Resource(restful.Resource):
+    method_decorators = []   # applies to all inherited resources; OauthAPI will append 'require_oauth' on init
+
+
 class API(restful.Api):
     def __init__(self, *args, **kwargs):
         super(API, self).__init__(*args, **kwargs)
@@ -73,12 +77,19 @@ class API(restful.Api):
         elif request.args.get('output_format', '') == 'json' or request.form.get('output_format', '') == 'json':
             return ['application/json']
 
-        if ((
-            'text/html' in request.accept_mimetypes or
-            'application/xhtml+xml' in request.accept_mimetypes)
+        if (('text/html' in request.accept_mimetypes or
+             'application/xhtml+xml' in request.accept_mimetypes)
                 and 'Mozilla' in request.user_agent.string):
             return ['application/json']
         return super(API, self).mediatypes()
+
+
+class OAuthAPI(API):
+    '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
+
+    def __init__(self, *args, **kwargs):
+        super(API, self).__init__(*args, **kwargs)
+        Resource.method_decorators = [require_oauth]
 
 
 def require_oauth(func):
@@ -104,10 +115,6 @@ def require_oauth(func):
 
 def oauth_bypass():
     return current_app.config.get('TESTING_PARTNER_API_KEY', None)
-
-
-class Resource(restful.Resource):
-    method_decorators = [require_oauth]   # applies to all inherited resources
 
 
 def prepare_output(data, code, headers=None):
