@@ -4,15 +4,12 @@ from os import environ
 
 from flask import Flask
 
-from hoops.restful import API
-import hoops.json_add_to_json_hack
-
+from .restful import API
+import json_add_to_json_hack
 
 flask = None
 api = None
 db = None
-
-VERSION = "1.0.0"
 
 
 def create_app(database, app_name=None, rest_args=None, flask_conf=None):

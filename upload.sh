@@ -7,3 +7,4 @@ index=${1:-internal}
 echo $index
 rm -r dist/ hoops.egg-info/
 python setup.py sdist upload -r $index
+rm -r dist/ hoops.egg-info/

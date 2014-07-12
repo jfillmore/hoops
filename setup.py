@@ -50,11 +50,11 @@ setup(
             'http-parser==0.8.3',
             'restkit==4.2.2',
             'socketpool==0.5.3',
-            # FIXME: setup.py does not seem to work with these references.
-            # FIXME: I suggest that we switch to different oauth implementation, such as oauthlib
-            # '-e git://github.com/rhooper/python-oauth.git#egg=oauth',
-            # '-e git://github.com/daaku/python-urlencoding.git#egg=urlencoding',
             ],
+    dependency_links = [
+            'git://github.com/rhooper/python-oauth.git#egg=oauth',
+            'git://github.com/daaku/python-urlencoding.git#egg=urlencoding',
+    ],
     entry_points={
         'console_scripts': [
             'server = run_api:main',

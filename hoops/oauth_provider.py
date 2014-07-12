@@ -4,7 +4,8 @@ from oauth import OAuthRequest, OAuthError, OAuthMissingParameterError
 from oauth.signature_method.hmac_sha1 import OAuthSignatureMethod_HMAC_SHA1
 
 from hoops.status import library as status
-from models.core import PartnerAPIKey
+# FIXME: partner_api_key from PartnerAPIKey
+# from models.core import PartnerAPIKey
 
 
 OAUTH_PARAMS = (
@@ -29,9 +30,10 @@ def oauth_authentication():
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
 
-    partner_api_key = PartnerAPIKey.query_active.filter_by(
-        consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
-
+    # FIXME: partner_api_key from PartnerAPIKey
+    # partner_api_key = .query_active.filter_by(
+    #     consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
+    partner_api_key = 'WRONG_KEY'
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 

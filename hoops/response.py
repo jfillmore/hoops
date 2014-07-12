@@ -1,7 +1,9 @@
 import copy
 
-from hoops import VERSION
+
 import hoops.status
+
+VERSION = "1.0.0"
 
 response_template = {
     "api_version": VERSION,
