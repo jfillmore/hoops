@@ -1,12 +1,12 @@
 __import__('pkg_resources').declare_namespace(__name__)
 
-from os import environ
+# from os import environ
 
 from flask import Flask
 
 from hoops.restful import API, OAuthAPI
 import hoops.json_add_to_json_hack
-
+from hoops.test_utilities import TestUtilities
 
 flask = None
 api = None

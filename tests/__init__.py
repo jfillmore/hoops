@@ -1,7 +1,7 @@
 
 from flask import url_for
 from tests.local import SQLALCHEMY_DATABASE_URI
-from jetlaunch_common.db import clear_database
+from hoops import TestUtilities
 
 
 class TestBase(object):
@@ -16,7 +16,7 @@ class TestBase(object):
             cls.db.app = cls._app
         if cls.db:
             cls.db.create_all()
-            clear_database(cls.db)
+            TestUtilities.clear_database(cls.db)
         cls.app = cls._app.test_client()
 
         #from jetlaunch.consumer import BaseKitAPIClient as BK

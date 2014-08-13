@@ -21,6 +21,8 @@ setup(
             'Werkzeug==0.9.4',
             'elementtree==1.2.6-20050316',
             'nose==1.3.0',
+            'configobj==5.0.5',
+            'simplejson==3.6.2',
             ],
     dependency_links = [
             'git://github.com/rhooper/python-oauth.git#egg=oauth',
