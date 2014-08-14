@@ -63,25 +63,25 @@ class TestBaseClasses(APITestBase):
             op()
             assert hasattr(op, 'okay')
 
-    def test_combined_params(self):
-        """Test combined_params"""
-        @parameter('person_id', Int, "test")
-        class test_res(APIResource):
-            pass
+    # def test_combined_params(self):
+    #     """Test combined_params"""
+    #     @parameter('person_id', Int, "test")
+    #     class test_res(APIResource):
+    #         pass
 
-        @parameter('customer_id', Int, "test")
-        @test_res.method('list')
-        class test_op(APIOperation):
-            pass
+    #     @parameter('customer_id', Int, "test")
+    #     @test_res.method('list')
+    #     class test_op(APIOperation):
+    #         pass
 
-        op = test_op(resource=test_res())
-        with self._app.test_request_context("/foo?customer_id=1&person_id=1"):
-            op()
+    #     op = test_op(resource=test_res())
+    #     with self._app.test_request_context("/foo?customer_id=1&person_id=1"):
+    #         op()
 
-        op.params = {"test": 1}
-        op.url_params = {"test2": 2}
-        assert 'test' in op.combined_params
-        assert 'test2' in op.combined_params
+    #     op.params = {"test": 1}
+    #     op.url_params = {"test2": 2}
+    #     assert 'test' in op.combined_params
+    #     assert 'test2' in op.combined_params
 
     def test_validation(self):
         """Test validation works"""

@@ -14,6 +14,7 @@ class APITestBase(TestBase):
     def get_app(cls):
         cls.db = db
         api, app = create_api(flask_conf={'DEBUG': True})
+
         return app
 
     @classmethod
