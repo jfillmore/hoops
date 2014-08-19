@@ -3,6 +3,7 @@ from formencode.validators import String, Int
 from hoops.status import library
 from hoops.base import APIOperation, APIResource, parameter, url_parameter
 from tests.api_tests import APITestBase
+
 # from models.core import Customer, Partner, Language, Package, CustomerPackage, User
 # from apps.api.exc import APIException
 
@@ -25,7 +26,6 @@ class RetreiveTest(APIOperation):
 class ListTest(APIOperation):
     pass
 
-
 # @url_parameter('customer_id', Int, "test")
 # class test_model(APIResource):
 #     route = "/cust"
@@ -33,7 +33,6 @@ class ListTest(APIOperation):
 #     object_id_param = 'customer_id'
 #     model = Customer
 #     read_only = False
-
 
 # @test_model.method('retrieve')
 # class CustRetreiveTest(APIModelOperation):
@@ -43,7 +42,6 @@ class ListTest(APIOperation):
 # @test_model.method('update')
 # class CustPutTest(APIModelOperation):
 #     pass
-
 
 class TestBaseClasses(APITestBase):
 
@@ -63,25 +61,25 @@ class TestBaseClasses(APITestBase):
             op()
             assert hasattr(op, 'okay')
 
-    # def test_combined_params(self):
-    #     """Test combined_params"""
-    #     @parameter('person_id', Int, "test")
-    #     class test_res(APIResource):
-    #         pass
+    def test_combined_params(self):
+        """Test combined_params"""
+        @parameter('person_id', Int, "test")
+        class test_res(APIResource):
+            pass
 
-    #     @parameter('customer_id', Int, "test")
-    #     @test_res.method('list')
-    #     class test_op(APIOperation):
-    #         pass
+        @parameter('customer_id', Int, "test")
+        @test_res.method('list')
+        class test_op(APIOperation):
+            pass
 
-    #     op = test_op(resource=test_res())
-    #     with self._app.test_request_context("/foo?customer_id=1&person_id=1"):
-    #         op()
+        op = test_op(resource=test_res())
+        with self._app.test_request_context("/foo?customer_id=1&person_id=1"):
+            op()
 
-    #     op.params = {"test": 1}
-    #     op.url_params = {"test2": 2}
-    #     assert 'test' in op.combined_params
-    #     assert 'test2' in op.combined_params
+        op.params = {"test": 1}
+        op.url_params = {"test2": 2}
+        assert 'test' in op.combined_params
+        assert 'test2' in op.combined_params
 
     def test_validation(self):
         """Test validation works"""
@@ -92,8 +90,8 @@ class TestBaseClasses(APITestBase):
         """Test validation failure works"""
         rv = self.app.get("/test/Yup?nope=Failed")
         self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
-        rv = self.app.get("/cust/Nope")
-        self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
+        # rv = self.app.get("/cust/Nope")
+        # self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
         rv = self.app.get("/test/Nope")
         self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
 
@@ -134,15 +132,15 @@ class TestBaseClasses(APITestBase):
         # rv = self.app.post("/cust")
         # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
 
-        # rv = self.app.post("/cust/1223123313")
-        # self.validate(rv, library.API_RESOURCE_NOT_FOUND)
+        rv = self.app.post("/cust/1223123313")
+        self.validate(rv, library.API_RESOURCE_NOT_FOUND)
         rv = self.app.post("/test")
         self.validate(rv, library.API_INVALID_REQUEST_METHOD)
 
         # rv = self.app.delete("/cust/3321")
         # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
-        # rv = self.app.delete("/cust")
-        # self.validate(rv, library.API_RESOURCE_NOT_FOUND)
+        rv = self.app.delete("/cust")
+        self.validate(rv, library.API_RESOURCE_NOT_FOUND)
         rv = self.app.delete("/test/1")
         self.validate(rv, library.API_INVALID_REQUEST_METHOD)
 

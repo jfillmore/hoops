@@ -4,17 +4,18 @@ from tests import TestBase
 # from models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
 # from apps.api import db, create_app
 # import apps.api.status
-
-from hoops import create_api, db
-
+# from flask import url_for
+from hoops import create_api, register_views
+api = None
 
 class APITestBase(TestBase):
 
     @classmethod
     def get_app(cls):
-        cls.db = db
-        api, app = create_api(flask_conf={'DEBUG': True})
-
+        cls.db = None
+        cls.api, app = create_api(flask_conf={'DEBUG': True,
+                                              'ENVIRONMENT_NAME': 'test'})
+        register_views()
         return app
 
     @classmethod

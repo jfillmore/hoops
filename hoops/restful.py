@@ -68,6 +68,12 @@ class API(restful.Api):
         # We don't use the default error handler
         #return super(API, self).handle_error(e)
 
+    def _should_use_fr_error_handler(self):
+        """ Determine if error should be handled with FR or default Flask
+            Return True since we need all errors handled in above handler.
+        """
+        return True
+
     def mediatypes(self):
         """Replaces the acceptable media types with application/json if the request came from a browser.
         Also looks for output_type parameter.

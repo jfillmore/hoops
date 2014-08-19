@@ -146,32 +146,34 @@ class APIResource(Resource):
 
     def post(self, **kwargs):
         if self.object_id_param in kwargs:
-            abort(404)  # Can't POST with arguments in URL
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't POST with arguments in URL
         if self.read_only:
             abort(405)
         return self.create(**kwargs)
 
     def put(self, **kwargs):
         if not self.object_id_param in kwargs:
-            abort(404)  # Can't PUT without arguments (that may have an ID)
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't PUT without arguments (that may have an ID)
         if self.read_only:
             abort(405)
         return self.update(**kwargs)
 
     def delete(self, **kwargs):
         if not self.object_id_param in kwargs:
-            abort(404)  # Can't DELETE without arguments (that may have an ID)
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't DELETE without arguments (that may have an ID)
         if self.read_only:
             abort(405)
         return self.remove(**kwargs)
 
     @classmethod
     def register(cls):
-        routes = [cls.route]
+
+        routes = [cls.route] if cls.route else []
         object_route = getattr(cls, 'object_route', None)
         if object_route:
             routes.append(object_route)
-        hoops.api.add_resource(cls, *routes)
+        if routes:
+            hoops.api.add_resource(cls, *routes)
 
 
 class base_parameter(object):
