@@ -1,7 +1,7 @@
 
 from formencode.validators import String, Int
 from hoops.status import library
-from hoops.base import APIOperation, APIResource, parameter, url_parameter
+from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
 from tests.api_tests import APITestBase
 
 # from models.core import Customer, Partner, Language, Package, CustomerPackage, User
@@ -26,22 +26,22 @@ class RetreiveTest(APIOperation):
 class ListTest(APIOperation):
     pass
 
-# @url_parameter('customer_id', Int, "test")
-# class test_model(APIResource):
-#     route = "/cust"
-#     object_route = "/cust/<string:customer_id>"
-#     object_id_param = 'customer_id'
-#     model = Customer
-#     read_only = False
+@url_parameter('customer_id', Int, "test")
+class test_model(APIResource):
+    route = "/cust"
+    object_route = "/cust/<string:customer_id>"
+    object_id_param = 'customer_id'
+    # model = Customer
+    read_only = False
 
-# @test_model.method('retrieve')
-# class CustRetreiveTest(APIModelOperation):
-#     pass
+@test_model.method('retrieve')
+class CustRetreiveTest(APIModelOperation):
+    pass
 
 
-# @test_model.method('update')
-# class CustPutTest(APIModelOperation):
-#     pass
+@test_model.method('update')
+class CustPutTest(APIModelOperation):
+    pass
 
 class TestBaseClasses(APITestBase):
 
@@ -90,8 +90,8 @@ class TestBaseClasses(APITestBase):
         """Test validation failure works"""
         rv = self.app.get("/test/Yup?nope=Failed")
         self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
-        # rv = self.app.get("/cust/Nope")
-        # self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
+        rv = self.app.get("/cust/Nope")
+        self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
         rv = self.app.get("/test/Nope")
         self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
 
@@ -147,11 +147,11 @@ class TestBaseClasses(APITestBase):
         # rv = self.app.get("/cust")
         # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
 
-    # def test_route_registration(self):
-    #     '''Verify auto-registration works by checking for a couple known routes'''
-    #     assert '/cust/<string:customer_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
-    #     assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
-    #     assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
+    def test_route_registration(self):
+        '''Verify auto-registration works by checking for a couple known routes'''
+        assert '/cust/<string:customer_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
 
     def test_parameter_decorator(self):
         """Test @parameter decorator"""
