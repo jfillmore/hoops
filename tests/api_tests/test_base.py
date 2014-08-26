@@ -4,8 +4,8 @@ from hoops.status import library
 from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
 from tests.api_tests import APITestBase
 
-# from models.core import Customer, Partner, Language, Package, CustomerPackage, User
-# from apps.api.exc import APIException
+from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
+from hoops.exc import APIException
 
 
 @parameter('test', String, "test")
@@ -31,7 +31,7 @@ class test_model(APIResource):
     route = "/cust"
     object_route = "/cust/<string:customer_id>"
     object_id_param = 'customer_id'
-    # model = Customer
+    model = Customer
     read_only = False
 
 @test_model.method('retrieve')
@@ -122,36 +122,36 @@ class TestBaseClasses(APITestBase):
 
     def test_allops(self):
         """Test all endpoints trigger as expected within base (if not already tested)"""
-        # rv = self.app.put("/cust/123?test=OK")
-        # self.validate(rv, library.API_OK)
-        # rv = self.app.put("/cust")
-        # self.validate(rv, library.API_RESOURCE_NOT_FOUND)
+        rv = self.app.put("/cust/123?test=OK")
+        self.validate(rv, library.API_OK)
+        rv = self.app.put("/cust")
+        self.validate(rv, library.API_RESOURCE_NOT_FOUND)
         rv = self.app.put("/test/1")
         self.validate(rv, library.API_INVALID_REQUEST_METHOD)
 
-        # rv = self.app.post("/cust")
-        # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
+        rv = self.app.post("/cust")
+        self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
 
         rv = self.app.post("/cust/1223123313")
         self.validate(rv, library.API_RESOURCE_NOT_FOUND)
         rv = self.app.post("/test")
         self.validate(rv, library.API_INVALID_REQUEST_METHOD)
 
-        # rv = self.app.delete("/cust/3321")
-        # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
+        rv = self.app.delete("/cust/3321")
+        self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
         rv = self.app.delete("/cust")
         self.validate(rv, library.API_RESOURCE_NOT_FOUND)
         rv = self.app.delete("/test/1")
         self.validate(rv, library.API_INVALID_REQUEST_METHOD)
 
-        # rv = self.app.get("/cust")
-        # self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
+        rv = self.app.get("/cust")
+        self.validate(rv, library.API_CODE_NOT_IMPLEMENTED)
 
     def test_route_registration(self):
         '''Verify auto-registration works by checking for a couple known routes'''
         assert '/cust/<string:customer_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
-        assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
-        assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        # assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        # assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
 
     def test_parameter_decorator(self):
         """Test @parameter decorator"""

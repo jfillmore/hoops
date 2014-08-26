@@ -1,8 +1,8 @@
 
 
 from tests.api_tests import APITestBase
-from apps.api.exc import APIValidationException
-from apps.api.status import library
+from hoops.exc import APIValidationException
+from hoops.status import library
 
 
 class TestAPIExc(APITestBase):

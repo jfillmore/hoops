@@ -2,12 +2,12 @@
 Test our Flask-RESTful subclass
 '''
 
-from apps.api.restful import Resource
-from apps.api.response import APIResponse
-from apps.api.exc import APIException
-from apps.api.status import library as status
+from hoops.restful import Resource
+from hoops.response import APIResponse
+from hoops.exc import APIException
+from hoops.status import library as status
 from tests.api_tests import APITestBase
-import apps.api
+import hoops
 
 
 class WordWordWord(Resource):
@@ -41,9 +41,9 @@ class TestRestFulApi(APITestBase):
 
     @classmethod
     def setup_app(cls):
-        apps.api.api.add_resource(WordWordWord, '/word', endpoint='word')
-        apps.api.api.add_resource(TestXMLList, '/list', endpoint='list')
-        apps.api.api.add_resource(TestBasicResponse, '/basic', endpoint='basic')
+        hoops.api.add_resource(WordWordWord, '/word', endpoint='word')
+        hoops.api.add_resource(TestXMLList, '/list', endpoint='list')
+        hoops.api.add_resource(TestBasicResponse, '/basic', endpoint='basic')
         super(TestRestFulApi, cls).setup_app()
 
     def test_app(self):
