@@ -5,7 +5,7 @@ from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, 
 class TestUtilities(object):
 
     @classmethod
-    def drop_tables(db):
+    def drop_tables(cls, db):
         """
         Drop All tables from database
         """
@@ -40,7 +40,7 @@ class TestUtilities(object):
         trans.commit()
 
     @classmethod
-    def clear_database(db):
+    def clear_database(cls, db):
         """
         Remove all rows from all tables
         """

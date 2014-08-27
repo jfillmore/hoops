@@ -108,6 +108,7 @@ class APIResource(Resource):
     model = None
     read_only = True
     object_id_param = None
+    endpoint = None
 
     create = UnimplementedOperation()
     retrieve = UnimplementedOperation()
@@ -128,7 +129,7 @@ class APIResource(Resource):
             return purge_oauth_keys(request.form)
 
     @classmethod
-    def method(self, method):
+    def method(self, method, endpoint=None):
         '''
         Decorator to bind a callable as the handler for a method.
         It sets the resource property on the callable to be the parent resource.
@@ -173,7 +174,27 @@ class APIResource(Resource):
         if object_route:
             routes.append(object_route)
         if routes:
-            hoops.api.add_resource(cls, *routes)
+            hoops.api.add_resource(cls, *routes, endpoint=cls.route)
+
+    @classmethod
+    def get_base_query(self, **kwargs):
+        include_inactive = kwargs.get('include_inactive', False)
+        include_suspended = kwargs.get('include_suspended', False)
+
+        model = self.model
+
+        if not (include_suspended or include_inactive):
+            query = model.query_active
+        elif include_suspended and not include_inactive:
+            query = model.query_active_or_suspended
+        elif include_inactive and not include_suspended:
+            query = model.query_all_except_suspended
+        else:
+            query = model.query
+
+        if kwargs.get('limit_to_partner', False):
+            return query.filter_by(partner=g.partner)
+        return query
 
 
 class base_parameter(object):

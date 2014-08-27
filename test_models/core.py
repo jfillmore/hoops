@@ -2,7 +2,7 @@
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, UniqueConstraint, Numeric
 import re
 from flask_login import UserMixin
-from jetlaunch_common.util import random_key_generator
+from hoops.utils import random_key_generator
 from test_models.common import BaseModel, SluggableModel, HashableModel
 from test_models import db
 from test_models.basekit import BaseKitSite

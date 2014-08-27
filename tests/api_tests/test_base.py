@@ -1,4 +1,4 @@
-
+from flask import g
 from formencode.validators import String, Int
 from hoops.status import library
 from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
@@ -34,14 +34,33 @@ class test_model(APIResource):
     model = Customer
     read_only = False
 
-@test_model.method('retrieve')
+@test_model.method('retrieve', 'customer')
 class CustRetreiveTest(APIModelOperation):
     pass
-
 
 @test_model.method('update')
 class CustPutTest(APIModelOperation):
     pass
+
+class Customer(APIResource):
+    route = "/customers"
+    object_route = "/customers/<string:customer_id>"
+    object_id_param = 'customer_id'
+    model = Customer
+    read_only = False
+
+
+@Customer.method('list')
+class ListCustomers(APIModelOperation):
+    pass
+
+
+@Customer.method('retrieve')
+@url_parameter('customer_id', Int, "Customer ID")
+class RetrieveCustomer(APIModelOperation):
+    id_column = 'id'
+
+
 
 class TestBaseClasses(APITestBase):
 
@@ -95,30 +114,30 @@ class TestBaseClasses(APITestBase):
         rv = self.app.get("/test/Nope")
         self.validate(rv, library.API_INPUT_VALIDATION_FAILED)
 
-    # def test_model_op(self):
-    #     """Test APIModelOperation behaves as expected"""
-    #     self.populate(use_db=self.db)
-    #     partner = Partner.query.filter_by(name='dev').first()
-    #     custid = partner.customers.first().id
-    #     with self._app.test_request_context("/cust/%s" % custid):
-    #         g.partner = partner
-    #         g.api_key = partner.api_keys.first()
-    #         op = CustRetreiveTest(resource=test_model())
-    #         op(customer_id=custid)
-    #         q = op.get_base_query()
-    #         assert q.count(), q.count()
-    #         item = op.load_object(customer_id=custid)
-    #         assert item.id == custid
+    def test_model_op(self):
+        """Test APIModelOperation behaves as expected"""
+        self.populate(use_db=self.db)
+        partner = Partner.query.filter_by(name='dev').first()
+        custid = partner.customers.first().id
+        with self._app.test_request_context("/cust/%s" % custid):
+            g.partner = partner
+            g.api_key = partner.api_keys.first()
+            op = CustRetreiveTest(resource=test_model())
+            op(customer_id=custid)
+            q = op.get_base_query()
+            assert q.count(), q.count()
+            item = op.load_object(customer_id=custid)
+            assert item.id == custid
 
-    #     with self._app.test_request_context("/cust/1231"):
-    #         try:
-    #             g.partner = partner
-    #             g.api_key = partner.api_keys.first()
-    #             op.url_params['customer_id'] = op.url_params['customer_id'] + 1
-    #             obj = op.load_object()
-    #             assert False, "Object load succeeded %s" % obj
-    #         except APIException:
-    #             assert True, "Object didn't load - good"
+        with self._app.test_request_context("/cust/1231"):
+            try:
+                g.partner = partner
+                g.api_key = partner.api_keys.first()
+                op.url_params['customer_id'] = op.url_params['customer_id'] + 10
+                obj = op.load_object()
+                assert False, "Object load succeeded %s" % obj
+            except APIException:
+                assert True, "Object didn't load - good"
 
     def test_allops(self):
         """Test all endpoints trigger as expected within base (if not already tested)"""
@@ -207,57 +226,57 @@ class TestBaseClasses(APITestBase):
         assert 'second' in Thing2.url_schema.fields
         assert 'third' in Thing2.url_schema.fields
 
-    # def test_get_base_query(self):
-    #     """Tests the various permutations of include_inactive/include_suspended"""
-    #     lang_en = Language.query.filter_by(lang='en').one()
+    def test_get_base_query(self):
+        """Tests the various permutations of include_inactive/include_suspended"""
+        lang_en = Language.query.filter_by(lang='en').one()
 
-    #     p2 = Partner(name='eNom_2', language=lang_en, output_format='json', slug=None)
-    #     p3 = Partner(name='eNom_3', language=lang_en, output_format='json', slug=None)
-    #     self.db.session.add_all([p2, p3])
+        p2 = Partner(name='eNom_2', language=lang_en, output_format='json', slug=None)
+        p3 = Partner(name='eNom_3', language=lang_en, output_format='json', slug=None)
+        self.db.session.add_all([p2, p3])
 
-    #     self.db.session.flush()
-    #     p1 = Partner.query.first()
+        self.db.session.flush()
+        p1 = Partner.query.first()
 
-    #     c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
-    #     c7 = Customer(name="TestCustomer7", my_identifier="test_customer_700", partner=p1, status='active')
-    #     self.db.session.add_all([
-    #         c1,
-    #         Customer(name="TestCustomer2", my_identifier="test_customer_200", partner=p2, status='active'),
-    #         Customer(name="TestCustomer3", my_identifier="test_customer_100", partner=p1, status='suspended'),
-    #         Customer(name="TestCustomer4", my_identifier="test_customer_400", partner=p1, status='active'),
-    #         Customer(name="TestCustomer5", my_identifier="test_customer_500", partner=p2, status='active'),
-    #         Customer(name="TestCustomer6", my_identifier="test_customer_600", partner=p1, status='deleted'),
-    #         c7])
+        c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
+        c7 = Customer(name="TestCustomer7", my_identifier="test_customer_700", partner=p1, status='active')
+        self.db.session.add_all([
+            c1,
+            Customer(name="TestCustomer2", my_identifier="test_customer_200", partner=p2, status='active'),
+            Customer(name="TestCustomer3", my_identifier="test_customer_100", partner=p1, status='suspended'),
+            Customer(name="TestCustomer4", my_identifier="test_customer_400", partner=p1, status='active'),
+            Customer(name="TestCustomer5", my_identifier="test_customer_500", partner=p2, status='active'),
+            Customer(name="TestCustomer6", my_identifier="test_customer_600", partner=p1, status='deleted'),
+            c7])
 
-    #     pkg1 = Package(name="Test Package 001", enabled=1, partner=p1, description='test_package 0001')
-    #     pkg2 = Package(name="Test Package 002", enabled=1, partner=p1, description='test_package 002')
-    #     pkg3 = Package(name="Test Package 003", enabled=0, partner=p1, description='test_package 003')
+        pkg1 = Package(name="Test Package 001", enabled=1, partner=p1, description='test_package 0001')
+        pkg2 = Package(name="Test Package 002", enabled=1, partner=p1, description='test_package 002')
+        pkg3 = Package(name="Test Package 003", enabled=0, partner=p1, description='test_package 003')
 
-    #     self.db.session.add_all([
-    #         pkg1, pkg2, pkg3,
-    #         CustomerPackage(package=pkg1, status='active', customer=c1),
-    #         CustomerPackage(package=pkg2, status='active', customer=c1),
-    #         CustomerPackage(package=pkg3, status='disabled', customer=c1),
-    #         CustomerPackage(package=pkg3, status='active', customer=c7),
+        self.db.session.add_all([
+            pkg1, pkg2, pkg3,
+            CustomerPackage(package=pkg1, status='active', customer=c1),
+            CustomerPackage(package=pkg2, status='active', customer=c1),
+            CustomerPackage(package=pkg3, status='disabled', customer=c1),
+            CustomerPackage(package=pkg3, status='active', customer=c7),
 
-    #         User(customer=c1, partner=p1, status='active', firstname='user',
-    #              lastname='test_1', language=lang_en, email='me@me.com', password='test1', my_identifier='test001'),
-    #         User(customer=c1, partner=p1, status='active', firstname='user2',
-    #              lastname='test_2', language=lang_en, email='me_2@me.com', password='test2', my_identifier='test002'),
-    #         User(customer=c1, partner=p1, status='disabled', firstname='user3',
-    #              lastname='test_3', language=lang_en, email='me_3@me.com', password='test3', my_identifier='test003')
-    #     ])
+            User(customer=c1, partner=p1, status='active', firstname='user',
+                 lastname='test_1', language=lang_en, email='me@me.com', password='test1', my_identifier='test001'),
+            User(customer=c1, partner=p1, status='active', firstname='user2',
+                 lastname='test_2', language=lang_en, email='me_2@me.com', password='test2', my_identifier='test002'),
+            User(customer=c1, partner=p1, status='disabled', firstname='user3',
+                 lastname='test_3', language=lang_en, email='me_3@me.com', password='test3', my_identifier='test003')
+        ])
 
-    #     self.db.session.commit()
+        self.db.session.commit()
 
-    #     table = (
-    #         ({}, 3),
-    #         ({"include_suspended": 1}, 4),
-    #         ({"include_inactive": 1}, 4),
-    #         ({"include_suspended": 1, "include_inactive": 1}, 5),
-    #     )
-    #     for trial in table:
-    #         url = self.url_for('customer', **trial[0])
-    #         rv = self.app.get(url)
-    #         out = self.validate(rv, library.API_OK)
-    #         assert out["pagination"]["total"] == trial[1], 'found %s != expected %s for %s' % (out["pagination"]["total"], trial[1], trial[0])
+        table = (
+            ({}, 3),
+            ({"include_suspended": 1}, 4),
+            ({"include_inactive": 1}, 4),
+            ({"include_suspended": 1, "include_inactive": 1}, 5),
+        )
+        for trial in table:
+            url = self.url_for('cust', **trial[0])
+            rv = self.app.get(url)
+            out = self.validate(rv, library.API_OK)
+            assert out["pagination"]["total"] == trial[1], 'found %s != expected %s for %s' % (out["pagination"]["total"], trial[1], trial[0])
