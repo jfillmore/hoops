@@ -3,8 +3,8 @@ from tests import TestBase
 from test_models.core import Partner, Language, PartnerAPIKey, Service, Package, PackageService, PackageServiceParam, Customer, CustomerPackage, User
 from test_models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
 from test_models import db
-# import apps.api.status
-# from flask import url_for
+import hoops.status
+from flask import url_for
 from hoops import create_api, register_views
 api = None
 

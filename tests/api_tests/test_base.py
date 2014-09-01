@@ -2,6 +2,7 @@ from flask import g
 from formencode.validators import String, Int
 from hoops.status import library
 from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
+from hoops.generic import ListOperation, RetrieveOperation
 from tests.api_tests import APITestBase
 
 from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
@@ -26,6 +27,7 @@ class RetreiveTest(APIOperation):
 class ListTest(APIOperation):
     pass
 
+
 @url_parameter('customer_id', Int, "test")
 class test_model(APIResource):
     route = "/cust"
@@ -34,15 +36,18 @@ class test_model(APIResource):
     model = Customer
     read_only = False
 
+
 @test_model.method('retrieve', 'customer')
 class CustRetreiveTest(APIModelOperation):
     pass
+
 
 @test_model.method('update')
 class CustPutTest(APIModelOperation):
     pass
 
-class Customer(APIResource):
+
+class CustomerAPI(APIResource):
     route = "/customers"
     object_route = "/customers/<string:customer_id>"
     object_id_param = 'customer_id'
@@ -50,16 +55,17 @@ class Customer(APIResource):
     read_only = False
 
 
-@Customer.method('list')
-class ListCustomers(APIModelOperation):
+@CustomerAPI.method('list')
+@parameter('include_suspended', String, "Include Suspended", False, False)
+@parameter('include_inactive', String, "Include Inactive", False, False)
+class ListCustomers(ListOperation):
     pass
 
 
-@Customer.method('retrieve')
+@CustomerAPI.method('retrieve')
 @url_parameter('customer_id', Int, "Customer ID")
-class RetrieveCustomer(APIModelOperation):
+class RetrieveCustomer(RetrieveOperation):
     id_column = 'id'
-
 
 
 class TestBaseClasses(APITestBase):
@@ -270,13 +276,13 @@ class TestBaseClasses(APITestBase):
         self.db.session.commit()
 
         table = (
-            ({}, 3),
-            ({"include_suspended": 1}, 4),
-            ({"include_inactive": 1}, 4),
-            ({"include_suspended": 1, "include_inactive": 1}, 5),
+            ({}, 5),
+            ({"include_suspended": 1}, 6),
+            ({"include_inactive": 1}, 6),
+            ({"include_suspended": 1, "include_inactive": 1}, 7),
         )
         for trial in table:
-            url = self.url_for('cust', **trial[0])
+            url = self.url_for('/customers', **trial[0])
             rv = self.app.get(url)
             out = self.validate(rv, library.API_OK)
             assert out["pagination"]["total"] == trial[1], 'found %s != expected %s for %s' % (out["pagination"]["total"], trial[1], trial[0])
