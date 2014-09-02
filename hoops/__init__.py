@@ -40,6 +40,7 @@ def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oa
     if flask_conf:
         flask.config.update(flask_conf)
     if isinstance(oauth_args, dict):
+        rest_args['oauth_args'] = oauth_args
         api = OAuthAPI(flask, **rest_args)
     else:
         api = API(flask, **rest_args)

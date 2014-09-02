@@ -14,7 +14,6 @@ from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
 from hoops.oauth_provider import oauth_authentication
 
-
 error_map = {
     200: status_library.API_OK,
     403: status_library.API_FORBIDDEN,
@@ -94,9 +93,17 @@ class OAuthAPI(API):
     '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
 
     def __init__(self, *args, **kwargs):
+        oauth_args = kwargs['oauth_args']
+        del(kwargs['oauth_args'])
         super(API, self).__init__(*args, **kwargs)
         Resource.method_decorators = [require_oauth]
+        Resource.oauth_args = oauth_args
 
+    def set_oauth_args(self, oauth_args):
+        Resource.oauth_args = oauth_args
+
+    def set_partner(self, partner):
+        Resource.partner = partner
 
 def require_oauth(func):
     '''Auth wrapper from http://flask-restful.readthedocs.org/en/latest/extending.html?highlight=authentication'''
@@ -104,10 +111,9 @@ def require_oauth(func):
     def wrapper(*args, **kwargs):
         g.partner = None
         g.api_key = None
-
         api_key = oauth_bypass()
         if not api_key:
-            api_key = oauth_authentication()
+            api_key = oauth_authentication(Resource.partner)
 
         if api_key:
             g.partner = api_key.partner

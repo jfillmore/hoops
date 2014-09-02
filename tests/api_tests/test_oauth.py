@@ -45,16 +45,22 @@ class TestOAuth(APITestBase):
     @classmethod
     def get_app(cls):
         cls.db = db
+
+        oauth_args = {'consumer_key': None,
+                      'consumer_secret': None,
+                      'token': None,
+                      'token_secret': None}
         cls.api, app = create_api(database=db,
                                   flask_conf={'DEBUG': True,
                                               'ENVIRONMENT_NAME': 'test'},
-                                  oauth_args={'apikey': 'dummy_key'})
+                                  oauth_args=oauth_args)
         register_views()
         return app
 
     @classmethod
     def setup_app(cls):
         super(TestOAuth, cls).setup_app()
+        cls.db.session.expire_on_commit = False
         hoops.flask.config['TESTING_PARTNER_API_KEY'] = None
         hoops.api.add_resource(OAuthEndpoint, '/oauthed', endpoint='oauthed')
 
@@ -65,6 +71,12 @@ class TestOAuth(APITestBase):
         cls.key = dbhelper.add(cls.partner.generate_api_key('test'), db=cls.db)
         cls.db.session.refresh(cls.key)
         cls.db.session.refresh(cls.partner)
+        # hoops.api.set_oauth_args({'consumer_key': cls.key.consumer_key,
+        #                           'consumer_secret': cls.key.consumer_secret,
+        #                           'token': cls.key.token,
+        #                           'token_secret': cls.key.token_secret})
+
+        hoops.api.set_partner(cls.key)
 
     def test_oauth_get(self):
         """OAuth succeeds for GET requests"""
@@ -77,7 +89,7 @@ class TestOAuth(APITestBase):
 
     def test_oauth_invalid_consumer_key(self):
         """Test with bad consumer key"""
-        self.validate(self.app.get(self.url_for('oauthed', oauth_consumer_key='invalid')), hoops.status.library.API_UNKNOWN_OAUTH_CONSUMER_KEY)
+        self.validate(self.app.get(self.url_for('oauthed', oauth_consumer_key='invalid', oauth_timestamp=int(time.time()),)), hoops.status.library.API_UNKNOWN_OAUTH_CONSUMER_KEY)
 
     def test_oauth_post(self):
         """OAuth succeeds for POST requests"""
