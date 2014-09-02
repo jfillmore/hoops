@@ -5,7 +5,7 @@ from oauth.signature_method.hmac_sha1 import OAuthSignatureMethod_HMAC_SHA1
 
 from hoops.status import library as status
 # FIXME: partner_api_key from PartnerAPIKey
-# from models.core import PartnerAPIKey
+from test_models.core import PartnerAPIKey
 
 
 # TODO: support a mechanism for specifying how the oauth keys will be loaded
@@ -37,9 +37,9 @@ def oauth_authentication():
         raise status.API_AUTHENTICATION_REQUIRED
 
     # FIXME: partner_api_key from PartnerAPIKey
-    # partner_api_key = .query_active.filter_by(
-    #     consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
-    partner_api_key = 'WRONG_KEY'
+    partner_api_key = PartnerAPIKey.query_active.filter_by(
+        consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
+    # partner_api_key = 'WRONG_KEY'
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 

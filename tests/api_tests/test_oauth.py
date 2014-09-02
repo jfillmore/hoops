@@ -11,6 +11,8 @@ from hoops.restful import Resource
 from hoops.response import APIResponse
 import hoops
 import hoops.status
+from test_models import db
+from hoops import create_api, register_views
 
 
 class OAuthEndpoint(Resource):
@@ -40,6 +42,15 @@ class OAuthEndpoint(Resource):
 
 
 class TestOAuth(APITestBase):
+    @classmethod
+    def get_app(cls):
+        cls.db = db
+        cls.api, app = create_api(database=db,
+                                  flask_conf={'DEBUG': True,
+                                              'ENVIRONMENT_NAME': 'test'},
+                                  oauth_args={'apikey': 'dummy_key'})
+        register_views()
+        return app
 
     @classmethod
     def setup_app(cls):
@@ -60,137 +71,137 @@ class TestOAuth(APITestBase):
         self.oauth_call('GET', 'oauthed', 'query_string')
         self.oauth_call('GET', 'oauthed', 'header')
 
-    # def test_oauth_none(self):
-    #     """Test without credentials"""
-    #     self.validate(self.app.get('/oauthed'), apps.api.status.library.API_AUTHENTICATION_REQUIRED)
+    def test_oauth_none(self):
+        """Test without credentials"""
+        self.validate(self.app.get('/oauthed'), hoops.status.library.API_AUTHENTICATION_REQUIRED)
 
-    # def test_oauth_invalid_consumer_key(self):
-    #     """Test with bad consumer key"""
-    #     self.validate(self.app.get(self.url_for('oauthed', oauth_consumer_key='invalid')), apps.api.status.library.API_UNKNOWN_OAUTH_CONSUMER_KEY)
+    def test_oauth_invalid_consumer_key(self):
+        """Test with bad consumer key"""
+        self.validate(self.app.get(self.url_for('oauthed', oauth_consumer_key='invalid')), hoops.status.library.API_UNKNOWN_OAUTH_CONSUMER_KEY)
 
-    # def test_oauth_post(self):
-    #     """OAuth succeeds for POST requests"""
-    #     self.oauth_call('POST', 'oauthed', 'post')
-    #     self.oauth_call('POST', 'oauthed', 'header')
+    def test_oauth_post(self):
+        """OAuth succeeds for POST requests"""
+        self.oauth_call('POST', 'oauthed', 'post')
+        self.oauth_call('POST', 'oauthed', 'header')
 
-    # def test_oauth_put(self):
-    #     """OAuth succeeds for PUT requests"""
-    #     self.oauth_call('PUT', 'oauthed', 'post')
-    #     self.oauth_call('PUT', 'oauthed', 'header', content_type='application/json', data=json.dumps({"test": 1}))
-    #     self.oauth_call('PUT', 'oauthed', 'header', data='test=123')
+    def test_oauth_put(self):
+        """OAuth succeeds for PUT requests"""
+        self.oauth_call('PUT', 'oauthed', 'post')
+        self.oauth_call('PUT', 'oauthed', 'header', content_type='application/json', data=json.dumps({"test": 1}))
+        self.oauth_call('PUT', 'oauthed', 'header', data='test=123')
 
-    # def test_oauth_delete_querystring(self):
-    #     """OAuth succeeds for DELETE requests using query string"""
-    #     self.oauth_call('DELETE', 'oauthed', 'query_string', fail=False)
+    def test_oauth_delete_querystring(self):
+        """OAuth succeeds for DELETE requests using query string"""
+        self.oauth_call('DELETE', 'oauthed', 'query_string', fail=False)
 
-    # def test_oauth_delete_header(self):
-    #     """OAuth succeeds for DELETE requests using header"""
-    #     self.oauth_call('DELETE', 'oauthed', 'header', fail=False)
+    def test_oauth_delete_header(self):
+        """OAuth succeeds for DELETE requests using header"""
+        self.oauth_call('DELETE', 'oauthed', 'header', fail=False)
 
-    # def test_oauth2_emulate_restkit(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     headers = req.to_header()
-    #     rv = self.app.get(self.url_for('oauthed'), headers=headers)
-    #     data = json.loads(rv.data)
+    def test_oauth2_emulate_restkit(self):
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        headers = req.to_header()
+        rv = self.app.get(self.url_for('oauthed'), headers=headers)
+        data = json.loads(rv.data)
 
-    #     assert data.get('status_code') == 1000, \
-    #         "Expected successful authentication, got: %s " % rv.data
-    #     assert data.get('response_data').get('partner_id') == self.partner.id
-    #     assert data.get('response_data').get('api_key_id') == self.key.id
+        assert data.get('status_code') == 1000, \
+            "Expected successful authentication, got: %s " % rv.data
+        assert data.get('response_data').get('partner_id') == self.partner.id
+        assert data.get('response_data').get('api_key_id') == self.key.id
 
-    # def test_oauth_missing_parameter(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     del req['oauth_timestamp']
-    #     req.sign_request(signature_method, consumer, token)
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     data = json.loads(rv.data)
+    def test_oauth_missing_parameter(self):
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        del req['oauth_timestamp']
+        req.sign_request(signature_method, consumer, token)
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     # expecting = apps.api.status.library.get('API_MISSING_PARAMETER', parameter='none')
+        # Expecting API_MISSING_PARAMETER
+        # expecting = hoops.status.library.get('API_MISSING_PARAMETER', parameter='none')
 
-    #     # assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        # assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_expired_timestamp(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()) - 900,
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     data = json.loads(rv.data)
+    def test_oauth_expired_timestamp(self):
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()) - 900,
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     # expecting = apps.api.status.library.API_EXPIRED_TIMESTAMP
+        # Expecting API_MISSING_PARAMETER
+        expecting = hoops.status.library.API_EXPIRED_TIMESTAMP
 
-    #     # assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_unexpected_sig_type(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     req['oauth_signature_method'] = 'plain'
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     data = json.loads(rv.data)
+    def test_oauth_unexpected_sig_type(self):
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        req['oauth_signature_method'] = 'plain'
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     # expecting = apps.api.status.library.API_UNEXPECTED_OAUTH_SIGNATURE_METHOD
+        # Expecting API_MISSING_PARAMETER
+        expecting = hoops.status.library.API_UNEXPECTED_OAUTH_SIGNATURE_METHOD
 
-    #     # assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_corrupted_token_secret(self):
-    #     """OAuth fails for incorrect token_secret"""
-    #     orig_key = self.key
+    def test_oauth_corrupted_token_secret(self):
+        """OAuth fails for incorrect token_secret"""
+        orig_key = self.key
 
-    #     class fake(object):
-    #         def __init__(self, **kwargs):
-    #             for k in kwargs:
-    #                 setattr(self, k, kwargs[k])
+        class fake(object):
+            def __init__(self, **kwargs):
+                for k in kwargs:
+                    setattr(self, k, kwargs[k])
 
-    #     self.key = fake(**vars(orig_key))
-    #     self.key.token = orig_key.token
-    #     self.key.token_secret = 'asdf'
-    #     try:
-    #         self.oauth_call('GET', 'oauthed', 'query_string', fail=True)
-    #         self.oauth_call('GET', 'oauthed', 'header', fail=True)
-    #     finally:
-    #         self.key = orig_key
+        self.key = fake(**vars(orig_key))
+        self.key.token = orig_key.token
+        self.key.token_secret = 'asdf'
+        try:
+            self.oauth_call('GET', 'oauthed', 'query_string', fail=True)
+            self.oauth_call('GET', 'oauthed', 'header', fail=True)
+        finally:
+            self.key = orig_key
 
     def oauth_call(self, method, target, req_type='query_string', fail=False, **kwargs):
 
