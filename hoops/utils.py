@@ -1,3 +1,9 @@
+
+class Struct(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
 def random_key_generator():
     """ Method to generate random keys. It can be used to generate token, toke_secret etc.
     """

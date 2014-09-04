@@ -2,7 +2,7 @@ from functools import wraps
 import json
 import sys
 import traceback
-
+from copy import deepcopy
 from flask.ext import restful
 from flask import make_response, request, Markup, g, current_app
 from werkzeug.exceptions import HTTPException
@@ -13,7 +13,7 @@ from hoops.response import APIResponse
 from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
 from hoops.oauth_provider import oauth_authentication
-
+from hoops.utils import Struct
 error_map = {
     200: status_library.API_OK,
     403: status_library.API_FORBIDDEN,
@@ -97,13 +97,18 @@ class OAuthAPI(API):
         del(kwargs['oauth_args'])
         super(API, self).__init__(*args, **kwargs)
         Resource.method_decorators = [require_oauth]
-        Resource.oauth_args = oauth_args
+        # Resource.oauth_args = oauth_args
 
     def set_oauth_args(self, oauth_args):
-        Resource.oauth_args = oauth_args
+        # Resource.oauth_args = oauth_args
+        pass
 
     def set_partner(self, partner):
-        Resource.partner = partner
+        apidict = deepcopy(partner.__dict__)
+        apidict.update({"partner": None})
+        api_key = Struct(**apidict)
+        api_key.partner = Struct(**partner.partner.__dict__)
+        Resource.partner = api_key
 
 def require_oauth(func):
     '''Auth wrapper from http://flask-restful.readthedocs.org/en/latest/extending.html?highlight=authentication'''

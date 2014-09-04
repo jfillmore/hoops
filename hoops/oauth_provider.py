@@ -4,6 +4,7 @@ from oauth import OAuthRequest, OAuthError, OAuthMissingParameterError
 from oauth.signature_method.hmac_sha1 import OAuthSignatureMethod_HMAC_SHA1
 
 from hoops.status import library as status
+from hoops.utils import Struct
 # FIXME: partner_api_key from PartnerAPIKey
 from test_models.core import PartnerAPIKey
 
@@ -31,34 +32,19 @@ OAUTH_PARAMS = (
 
 def oauth_authentication(partner_api_key=None):
     params = {key: value for key, value in request.values.iteritems()}
+
     oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
 
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
 
-    # if not partner_api_key:
-    #     raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
-
-    # consumer = {
-    #     'oauth_consumer_key': partner_api_key['consumer_key'],
-    #     'oauth_consumer_secret': partner_api_key['consumer_secret']
-    # }
-    # token = {
-    #     'oauth_token': partner_api_key['token'],
-    #     'oauth_token_secret': partner_api_key['token_secret']
-    # }
-    # FIXME: partner_api_key from PartnerAPIKey
-    # partner_api_key = PartnerAPIKey.query_active.filter_by(
-    #     consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
-    # partner_api_key = 'WRONG_KEY'
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 
-    # print partner_api_key.consumer_key
-    # print partner_api_key.consumer_secret
-    # print partner_api_key.token
-    # print partner_api_key.token_secret
-    
+    # consumer_key_string = 'oauth_consumer_key="' + partner_api_key.consumer_key + '"'
+    # if not consumer_key_string in str(request.headers):
+    #     raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
+
     consumer = {
         'oauth_consumer_key': partner_api_key.consumer_key,
         'oauth_consumer_secret': partner_api_key.consumer_secret
@@ -69,9 +55,8 @@ def oauth_authentication(partner_api_key=None):
     }
 
     try:
-        oauth_request.validate_signature(
-            OAuthSignatureMethod_HMAC_SHA1, consumer, token)
-        
+        oauth_request.validate_signature(OAuthSignatureMethod_HMAC_SHA1, consumer, token)
+
         return partner_api_key
 
     except OAuthMissingParameterError as e:
