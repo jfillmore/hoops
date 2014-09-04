@@ -97,11 +97,10 @@ class OAuthAPI(API):
         del(kwargs['oauth_args'])
         super(API, self).__init__(*args, **kwargs)
         Resource.method_decorators = [require_oauth]
-        # Resource.oauth_args = oauth_args
+        Resource.oauth_args = Struct(**oauth_args)
 
     def set_oauth_args(self, oauth_args):
-        # Resource.oauth_args = oauth_args
-        pass
+        Resource.oauth_args = Struct(**oauth_args)
 
     def set_partner(self, partner):
         apidict = deepcopy(partner.__dict__)

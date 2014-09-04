@@ -4,15 +4,12 @@ from oauth import OAuthRequest, OAuthError, OAuthMissingParameterError
 from oauth.signature_method.hmac_sha1 import OAuthSignatureMethod_HMAC_SHA1
 
 from hoops.status import library as status
-from hoops.utils import Struct
-# FIXME: partner_api_key from PartnerAPIKey
-from test_models.core import PartnerAPIKey
 
 
 # TODO: support a mechanism for specifying how the oauth keys will be loaded
 # e.g.
-#   1. User passes in the keys to authorize against
-#   2. User passes in functions to invoke to get keys
+#   1. User passes in the keys to authorize against - Done
+#   2. User passes in functions to invoke to get keys - Done
 #   3. User passes in a table/model with a specific schema
 
 OAUTH_PARAMS = (
