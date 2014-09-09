@@ -1,7 +1,8 @@
-from models.basekit import BaseKitBrand, BaseKitUser
-from models.core import User
+from test_models.basekit import BaseKitBrand, BaseKitUser
+from test_models.common import BaseModel
+from test_models.core import User
 import time
-# from models.core import Language
+# from test_models.core import Language
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
 
@@ -51,7 +52,6 @@ class TestBaseKitUserModel(ModelsTestBase):
 
     def test_06_get_the_inherited_class(self):
         ''' Check the inherited BaseModel model class.'''
-        from models.common import BaseModel
         baskekit_user = BaseKitUser()
         assert isinstance(
             baskekit_user, BaseModel), "Test to check inheritance of BaseKitUser from BaseModel failed"

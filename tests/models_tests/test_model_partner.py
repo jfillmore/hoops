@@ -2,9 +2,9 @@
 import unittest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-from config import OutputFormat
+from test_config import OutputFormat
 from tests import dbhelper
-from models.core import Partner, Language
+from test_models.core import Partner, Language
 from tests.models_tests import ModelsTestBase
 import time
 

@@ -1,8 +1,9 @@
 
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
-from models.basekit import BaseKitPackageTemplate, BaseKitProvisioningHelper, BaseKitPackage, BaseKitCluster, BaseKitSite
-from models.core import Package
+from test_models.basekit import BaseKitPackageTemplate, BaseKitProvisioningHelper, BaseKitPackage, BaseKitCluster, BaseKitSite
+from test_models.core import Package, Partner, User, Customer
+from test_models.common import BaseModel
 import time
 
 
@@ -20,7 +21,6 @@ class TestBaseKitPackageTemplateModel(ModelsTestBase):
 
     def test_04_get_the_inherited_class(self):
         ''' Check the inherited BaseModel model class. '''
-        from models.common import BaseModel
         baskekit_package_templ = BaseKitPackageTemplate()
         assert isinstance(
             baskekit_package_templ, BaseModel), "Test to check inheritance from BaseModel failed"
@@ -53,7 +53,6 @@ class TestBaseKitPackageTemplateModel(ModelsTestBase):
 
     def test_07_for_basekit_provisioning_helper(self):
         ''' Test to impart coverage to basekit.BaseKitProvisioningHelper'''
-        from models.core import Partner, User, Customer
         p = Partner.query.filter_by(name='enom').one()
         brand = BaseKitProvisioningHelper.map_partner_to_brand(p)
         bkp = BaseKitPackage.query.first()

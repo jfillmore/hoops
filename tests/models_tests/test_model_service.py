@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from tests.models_tests import ModelsTestBase
-from models.core import Service
+from test_models.core import Service
 from sqlalchemy.exc import IntegrityError
 import time
 

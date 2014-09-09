@@ -1,9 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 from tests.models_tests import ModelsTestBase
-from models.core import Partner, Language, Package, Customer, CustomerPackage, Service, PackageService
-from config import OutputFormat
+from test_models.core import Partner, Language, Package, Customer, CustomerPackage, Service, PackageService
+from test_config import OutputFormat
 from tests import dbhelper
-from models import db
+from test_models import db
 
 
 class TestCustomerPackageModel(ModelsTestBase):

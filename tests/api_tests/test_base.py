@@ -7,6 +7,7 @@ from tests.api_tests import APITestBase
 
 from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
 from hoops.exc import APIException
+import hoops
 
 
 @parameter('test', String, "test")
@@ -58,6 +59,7 @@ class CustomerAPI(APIResource):
 @CustomerAPI.method('list')
 @parameter('include_suspended', String, "Include Suspended", False, False)
 @parameter('include_inactive', String, "Include Inactive", False, False)
+# @parameter('limit_to_partner', String, "Limit to partner", False, False)
 class ListCustomers(ListOperation):
     pass
 
@@ -274,6 +276,7 @@ class TestBaseClasses(APITestBase):
         ])
 
         self.db.session.commit()
+        hoops.api.set_partner(p1)
 
         table = (
             ({}, 5),

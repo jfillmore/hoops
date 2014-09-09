@@ -154,7 +154,7 @@ class BaseKitSite(BaseModel):
 
     @classmethod
     def get_for_customer_id(cls, customer_id):
-        from models.core import User
+        from test_models.core import User
         return cls.query_active_or_suspended.join(User).filter_by(customer_id=customer_id)
 
 
@@ -216,7 +216,7 @@ class BaseKitProvisioningHelper:
 
     @classmethod
     def find_basekit_package(cls, brand, customer):
-        from models.core import Package, CustomerPackage
+        from test_models.core import Package, CustomerPackage
         return brand.basekit_packages.join(Package).join(CustomerPackage).filter_by(customer=customer).first()
 
     @classmethod

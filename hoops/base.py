@@ -182,7 +182,7 @@ class APIResource(Resource):
         include_suspended = kwargs.get('include_suspended', False)
 
         model = self.model
-
+        # print kwargs, "~",g.partner,"~"
         if not (include_suspended or include_inactive):
             query = model.query_active
         elif include_suspended and not include_inactive:

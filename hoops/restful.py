@@ -88,6 +88,9 @@ class API(restful.Api):
             return ['application/json']
         return super(API, self).mediatypes()
 
+    def set_partner(self, partner):
+        Resource.partner = Struct(**partner.__dict__)
+
 
 class OAuthAPI(API):
     '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''

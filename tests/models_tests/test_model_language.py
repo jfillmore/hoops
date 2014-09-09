@@ -1,5 +1,5 @@
 from tests.models_tests import ModelsTestBase
-from models.core import Language
+from test_models.core import Language
 from tests import dbhelper
 from sqlalchemy.exc import IntegrityError
 
