@@ -3,3 +3,4 @@
 dist/
 hoops.egg-info/
 .idea/
+*.coverage
