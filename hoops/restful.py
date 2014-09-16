@@ -88,9 +88,6 @@ class API(restful.Api):
             return ['application/json']
         return super(API, self).mediatypes()
 
-    def set_partner(self, partner):
-        Resource.partner = Struct(**partner.__dict__)
-
 
 class OAuthAPI(API):
     '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
@@ -102,15 +99,13 @@ class OAuthAPI(API):
         Resource.method_decorators = [require_oauth]
         Resource.oauth_args = Struct(**oauth_args)
 
-    def set_oauth_args(self, oauth_args):
-        Resource.oauth_args = Struct(**oauth_args)
-
     def set_partner(self, partner):
         apidict = deepcopy(partner.__dict__)
         apidict.update({"partner": None})
         api_key = Struct(**apidict)
         api_key.partner = Struct(**partner.partner.__dict__)
         Resource.partner = api_key
+
 
 def require_oauth(func):
     '''Auth wrapper from http://flask-restful.readthedocs.org/en/latest/extending.html?highlight=authentication'''

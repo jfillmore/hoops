@@ -2,12 +2,13 @@ from flask import g
 from formencode.validators import String, Int
 from hoops.status import library
 from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
-from hoops.generic import ListOperation, RetrieveOperation
+from hoops.generic import ListOperation, RetrieveOperation, NotSpecified
 from tests.api_tests import APITestBase
 
 from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
 from hoops.exc import APIException
 import hoops
+
 
 
 @parameter('test', String, "test")
@@ -59,7 +60,6 @@ class CustomerAPI(APIResource):
 @CustomerAPI.method('list')
 @parameter('include_suspended', String, "Include Suspended", False, False)
 @parameter('include_inactive', String, "Include Inactive", False, False)
-# @parameter('limit_to_partner', String, "Limit to partner", False, False)
 class ListCustomers(ListOperation):
     pass
 
@@ -234,6 +234,12 @@ class TestBaseClasses(APITestBase):
         assert 'second' in Thing2.url_schema.fields
         assert 'third' in Thing2.url_schema.fields
 
+    def test_nonzero(self):
+        ns = NotSpecified()
+        assert repr(ns) == "<unspecified>"
+        assert str(ns) == "<unspecified>"
+        assert bool(ns) is False
+
     def test_get_base_query(self):
         """Tests the various permutations of include_inactive/include_suspended"""
         lang_en = Language.query.filter_by(lang='en').one()
@@ -246,6 +252,8 @@ class TestBaseClasses(APITestBase):
         p1 = Partner.query.first()
 
         c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
+
+
         c7 = Customer(name="TestCustomer7", my_identifier="test_customer_700", partner=p1, status='active')
         self.db.session.add_all([
             c1,
@@ -276,7 +284,7 @@ class TestBaseClasses(APITestBase):
         ])
 
         self.db.session.commit()
-        hoops.api.set_partner(p1)
+        customer_id = c1.id
 
         table = (
             ({}, 5),
@@ -289,3 +297,12 @@ class TestBaseClasses(APITestBase):
             rv = self.app.get(url)
             out = self.validate(rv, library.API_OK)
             assert out["pagination"]["total"] == trial[1], 'found %s != expected %s for %s' % (out["pagination"]["total"], trial[1], trial[0])
+
+        url = self.url_for('/customers', page=3)
+        rv = self.app.get(url)
+        out = self.validate(rv, library.get('API_VALUE_TOO_HIGH', value='page'))
+
+        url = self.url_for('/customers', customer_id=customer_id)
+        rv = self.app.get(url)
+        out = self.validate(rv, library.API_OK)
+        assert customer_id == out['response_data']['id']

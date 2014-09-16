@@ -35,6 +35,7 @@ def oauth_authentication(partner_api_key=None):
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
 
+    # print partner_api_key.partner.enabled
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 
