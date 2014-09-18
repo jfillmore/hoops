@@ -3,7 +3,7 @@ from flask import g
 import json
 import restkit.oauth2 as oauth
 import time
-from formencode.validators import String
+from formencode.validators import String, UnicodeString
 
 from tests.api_tests import APITestBase
 from test_models.core import Partner, Language, Customer, PartnerAPIKey
@@ -15,8 +15,9 @@ import hoops.status
 from test_models import db
 from hoops import create_api, register_views
 from hoops.base import APIResource, parameter
-from hoops.generic import ListOperation
+from hoops.generic import ListOperation, CreateOperation
 
+print db
 
 class OAuthEndpoint(Resource):
     def get(self):
@@ -60,6 +61,13 @@ class ListCustomers(ListOperation):
     pass
 
 
+@CustomerAPI.method('create')
+@parameter('my_identifier', UnicodeString(max=64, if_missing=None), "Unique identifier of the customer in your database")
+@parameter('name', UnicodeString(max=64, if_missing=None), "Customer name for your reference")
+class CreateCustomer(CreateOperation):
+    pass
+
+
 class TestOAuth(APITestBase):
     @classmethod
     def get_app(cls):
@@ -73,6 +81,7 @@ class TestOAuth(APITestBase):
                                   flask_conf={'DEBUG': True,
                                               'ENVIRONMENT_NAME': 'test'},
                                   oauth_args=oauth_args)
+
         register_views()
         return app
 
@@ -255,6 +264,11 @@ class TestOAuth(APITestBase):
         out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
         assert out["pagination"]["total"] == 1, 'found %s != expected %s' % (out["pagination"]["total"], 1)
 
+    def test_create_customer(self):
+        """OAuth succeeds for POST requests"""
+        # self.oauth_call('POST', '/oauth_customers', 'post', fail=False, name='Test Customer 001', my_identifier='testcustomer001')
+        pass
+
     def oauth_call(self, method, target, req_type='query_string', fail=False, **kwargs):
 
         with self._app.app_context():
@@ -268,7 +282,7 @@ class TestOAuth(APITestBase):
                 'oauth_token': token.key,
                 'oauth_consumer_key': consumer.key,
             }
-            if req_type is 'query_string':
+            if req_type in ['query_string', 'post']:
                 get_params = dict(params, **kwargs)
                 req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True), parameters=get_params)
             else:
@@ -283,7 +297,7 @@ class TestOAuth(APITestBase):
                 rv = method(self.url_for(target, **req))
             elif req_type is 'post':
                 url = self.url_for(target, **req)
-                rv = method(self.url_for(target, **req), **kwargs)
+                rv = method(self.url_for(target, **req), data=kwargs)
             elif req_type is 'header':
                 url = self.url_for(target)
                 rv = method(url, headers=headers, **kwargs)
@@ -292,7 +306,7 @@ class TestOAuth(APITestBase):
             if not fail:
                 assert data.get('status_code') == 1000 or data.get('status_code') == 1004, \
                     "Expected successful authentication, got: %s " % rv.data
-                if type(data.get('response_data')) is dict:
+                if type(data.get('response_data')) is dict and target == '/oauthd':
                     assert data.get('response_data').get('partner_id') == self.key.partner_id
                     assert data.get('response_data').get('api_key_id') == self.key.id
             else:
@@ -320,7 +334,7 @@ class TestInvalidOAuth(APITestBase):
     @classmethod
     def get_app(cls):
         cls.db = db
-
+        # print "### => ", db
         oauth_args = {'consumer_key': None,
                       'consumer_secret': None,
                       'token': None,
@@ -338,8 +352,6 @@ class TestInvalidOAuth(APITestBase):
         super(TestInvalidOAuth, cls).setup_app()
         cls.db.session.expire_on_commit = False
         hoops.flask.config['TESTING_PARTNER_API_KEY'] = None
-        hoops.api.add_resource(OAuthEndpoint, '/oauthed', endpoint='oauthed')
-
         cls.language = Language.query.first()
         # print Language.query.first()
         cls.partner = dbhelper.add(
@@ -368,7 +380,7 @@ class TestInvalidOAuth(APITestBase):
                 'oauth_consumer_key': consumer.key,
             }
             get_params = dict(params, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
-            req = oauth.Request('GET', url=self.url_for('/oauth_customers', _external=True), parameters=get_params)
+            req = oauth.Request(method='GET', url=self.url_for('/oauth_customers', _external=True), parameters=get_params)
 
             signature_method = oauth.SignatureMethod_HMAC_SHA1()
             req.sign_request(signature_method, consumer, token)

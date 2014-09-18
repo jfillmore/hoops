@@ -2,13 +2,11 @@ from flask import g
 from formencode.validators import String, Int
 from hoops.status import library
 from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
-from hoops.generic import ListOperation, RetrieveOperation, NotSpecified
+from hoops.generic import ListOperation, RetrieveOperation, NotSpecified, CreateOperation
 from tests.api_tests import APITestBase
 
 from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
 from hoops.exc import APIException
-import hoops
-
 
 
 @parameter('test', String, "test")
@@ -68,6 +66,21 @@ class ListCustomers(ListOperation):
 @url_parameter('customer_id', Int, "Customer ID")
 class RetrieveCustomer(RetrieveOperation):
     id_column = 'id'
+
+
+# @CustomerAPI.method('update')
+# @parameter('my_identifier', UnicodeString(max=64, if_missing=NotSpecified()), "Unique identifier of the customer in your database")
+# @parameter('name', UnicodeString(max=64, if_missing=NotSpecified()), "Customer name for your reference")
+# @parameter('status', OneOf(Customer.model._valid_status_values, if_missing=NotSpecified()), "Customer status")
+# @url_parameter('customer_id', Int, "Customer ID")
+# class UpdateCustomer(UpdateOperation):
+#     id_column = 'id'
+#     force_update = True
+
+#     def process_request(self, *args, **kwargs):
+#         if self.params['status'] and not self.model.is_valid_status_transition(self.object.status, self.params['status']):
+#             raise status_library.exception('API_INVALID_STATUS_CHANGE', current=self.object.status, new=self.params['status'])
+#         return super(UpdateCustomer, self).process_request(*args, **kwargs)
 
 
 class TestBaseClasses(APITestBase):

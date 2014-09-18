@@ -1,8 +1,5 @@
-import copy
-import collections
-
 from flask import g
-from formencode.validators import Int, OneOf, String, StringBool
+from formencode.validators import Int, OneOf, String
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
 
@@ -51,21 +48,21 @@ class RetrieveOperation(APIModelOperation):
         return APIResponse(self.load_object())
 
 
-# class CreateOperation(APIModelOperation):
+class CreateOperation(APIModelOperation):
 
-#     def process_request(self, *args, **kwargs):
-#         super(CreateOperation, self).process_request(*args, **kwargs)
+    def process_request(self, *args, **kwargs):
+        super(CreateOperation, self).process_request(*args, **kwargs)
 
-#         obj = self.model(**self.params)
-#         if getattr(self.model, 'partner', None):
-#             obj.partner = g.partner
-#         db.session.add(obj)
-#         try:
-#             db.session.commit()
-#         except IntegrityError:
-#             db.session.rollback()
-#             raise status_library.API_DUPLICATE_VALUE  # TODO verify that was the case
-#         return APIResponse(obj)
+        obj = self.model(**self.params)
+        if getattr(self.model, 'partner', None):
+            obj.partner = g.partner
+        db.session.add(obj)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            raise status_library.API_DUPLICATE_VALUE  # TODO verify that was the case
+        return APIResponse(obj)
 
 
 class NotSpecified(object):

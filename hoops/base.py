@@ -13,7 +13,6 @@ from hoops.status import library as status_library
 
 
 class APIOperation(object):
-
     def __call__(self, *args, **kwargs):
         self.url_params = self.validate_url(**kwargs)
         self.params = self.validate_input()
@@ -146,6 +145,7 @@ class APIResource(Resource):
         return self.list(**kwargs)
 
     def post(self, **kwargs):
+        print kwargs
         if self.object_id_param in kwargs:
             raise status_library.API_RESOURCE_NOT_FOUND  # Can't POST with arguments in URL
         if self.read_only:
@@ -182,7 +182,6 @@ class APIResource(Resource):
         include_suspended = kwargs.get('include_suspended', False)
 
         model = self.model
-        # print kwargs, "~",g.partner,"~"
         if not (include_suspended or include_inactive):
             query = model.query_active
         elif include_suspended and not include_inactive:
