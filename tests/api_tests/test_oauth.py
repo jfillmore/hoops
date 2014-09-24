@@ -13,11 +13,11 @@ from hoops.response import APIResponse
 import hoops
 import hoops.status
 from test_models import db
+database = db
 from hoops import create_api, register_views
 from hoops.base import APIResource, parameter
 from hoops.generic import ListOperation, CreateOperation
 
-print db
 
 class OAuthEndpoint(Resource):
     def get(self):
@@ -65,6 +65,7 @@ class ListCustomers(ListOperation):
 @parameter('my_identifier', UnicodeString(max=64, if_missing=None), "Unique identifier of the customer in your database")
 @parameter('name', UnicodeString(max=64, if_missing=None), "Customer name for your reference")
 class CreateCustomer(CreateOperation):
+    db = database
     pass
 
 
@@ -266,7 +267,7 @@ class TestOAuth(APITestBase):
 
     def test_create_customer(self):
         """OAuth succeeds for POST requests"""
-        # self.oauth_call('POST', '/oauth_customers', 'post', fail=False, name='Test Customer 001', my_identifier='testcustomer001')
+        self.oauth_call('POST', '/oauth_customers', 'post', fail=False, name='Test Customer 001', my_identifier='testcustomer001')
         pass
 
     def oauth_call(self, method, target, req_type='query_string', fail=False, **kwargs):

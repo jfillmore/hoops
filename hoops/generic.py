@@ -7,7 +7,7 @@ from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse
 from hoops.status import library as status_library
 from hoops import db
-
+import hoops
 
 @parameter('limit', Int(min=1, max=100), "Page size", required=False, default=100)
 @parameter('page', Int(min=0), "Page number", required=False, default=1)
@@ -56,11 +56,16 @@ class CreateOperation(APIModelOperation):
         obj = self.model(**self.params)
         if getattr(self.model, 'partner', None):
             obj.partner = g.partner
-        db.session.add(obj)
+
+        print "Hoops", hoops.db
+        print "db", db
+        print "Self", self.db
+
+        self.db.session.add(obj)
         try:
-            db.session.commit()
+            self.db.session.commit()
         except IntegrityError:
-            db.session.rollback()
+            self.db.session.rollback()
             raise status_library.API_DUPLICATE_VALUE  # TODO verify that was the case
         return APIResponse(obj)
 

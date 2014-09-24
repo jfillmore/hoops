@@ -30,7 +30,7 @@ def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oa
        oauth_args: If given, the all Resources will require oauth authentication by default. The arguments given determine how the server's oauth keys are selected based on oauth_provider.py (TODO: set arg signature!)
     '''
 
-    global flask, api, babel, db
+    global flask, api, babel
 
     if not app_name:
         app_name = 'Unnamed Application'
@@ -50,10 +50,9 @@ def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oa
 
     # not all RESTFul APIs will have a database associated with it
     if database:
-        # database.app = flask
-        print 'DB ->', database
         database.init_app(flask)
-        db = database
+        hoops.db = database
+        # print hoops.db
 
     return api, flask
 
