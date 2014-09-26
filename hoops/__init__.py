@@ -4,6 +4,10 @@ __import__('pkg_resources').declare_namespace(__name__)
 
 from flask import Flask
 from flask.ext.babel import Babel
+from flask.ext.sqlalchemy import SQLAlchemy
+
+db = SQLAlchemy()
+
 from hoops.utils import find_subclasses
 
 from hoops.restful import API, OAuthAPI
@@ -14,7 +18,7 @@ from hoops.base import APIResource
 
 flask = None
 api = None
-db = None
+# db = None
 assets = None
 babel = None
 

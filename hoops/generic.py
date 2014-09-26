@@ -57,15 +57,11 @@ class CreateOperation(APIModelOperation):
         if getattr(self.model, 'partner', None):
             obj.partner = g.partner
 
-        print "Hoops", hoops.db
-        print "db", db
-        print "Self", self.db
-
-        self.db.session.add(obj)
+        db.session.add(obj)
         try:
-            self.db.session.commit()
+            db.session.commit()
         except IntegrityError:
-            self.db.session.rollback()
+            db.session.rollback()
             raise status_library.API_DUPLICATE_VALUE  # TODO verify that was the case
         return APIResponse(obj)
 

@@ -104,6 +104,7 @@ class OAuthAPI(API):
         apidict.update({"partner": None})
         api_key = Struct(**apidict)
         api_key.partner = Struct(**partner.partner.__dict__)
+        self.partner = api_key
         Resource.partner = api_key
 
 
