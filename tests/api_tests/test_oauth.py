@@ -3,7 +3,7 @@ from flask import g
 import json
 import restkit.oauth2 as oauth
 import time
-from formencode.validators import String, UnicodeString, Int
+from formencode.validators import String, UnicodeString, Int, StringBool
 
 from tests.api_tests import APITestBase
 from test_models.core import Partner, Language, Customer, PartnerAPIKey
@@ -16,7 +16,7 @@ from test_models import db
 database = db
 from hoops import create_api, register_views
 from hoops.base import APIResource, parameter, url_parameter
-from hoops.generic import ListOperation, CreateOperation, UpdateOperation
+from hoops.generic import ListOperation, CreateOperation, UpdateOperation, include_related
 
 
 class OAuthEndpoint(Resource):
@@ -54,6 +54,7 @@ class CustomerAPI(APIResource):
 
 
 @CustomerAPI.method('list')
+@include_related('partner_id', 'partner', StringBool(if_missing=False), "Includes active partners in output")
 @parameter('include_suspended', String, "Include Suspended", False, False)
 @parameter('include_inactive', String, "Include Inactive", False, False)
 @parameter('limit_to_partner', String, "Limit to partner", False, False)
@@ -277,6 +278,7 @@ class TestOAuth(APITestBase):
         self.db.session.add_all([c1])
         self.db.session.commit()
         out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
+        # print out
         assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
 
     def test_create_customer(self):
