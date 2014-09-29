@@ -243,43 +243,45 @@ class TestOAuth(APITestBase):
 
         assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_corrupted_token_secret(self):
-    #     """OAuth fails for incorrect token_secret"""
-    #     orig_key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+    def test_oauth_corrupted_token_secret(self):
+        """OAuth fails for incorrect token_secret"""
+        orig_key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
 
-    #     class fake(object):
-    #         def __init__(self, **kwargs):
-    #             for k in kwargs:
-    #                 setattr(self, k, kwargs[k])
+        class fake(object):
+            def __init__(self, **kwargs):
+                for k in kwargs:
+                    setattr(self, k, kwargs[k])
 
-    #     self.key = fake(**vars(orig_key))
-    #     self.key.token = orig_key.token
-    #     self.key.token_secret = 'asdf'
-    #     try:
-    #         self.oauth_call('GET', 'oauthed', 'query_string', fail=True)
-    #         self.oauth_call('GET', 'oauthed', 'header', fail=True)
-    #     finally:
-    #         self.key = orig_key
+        self.key = fake(**vars(orig_key))
+        self.key.token = orig_key.token
+        self.key.token_secret = 'asdf'
+        try:
+            self.oauth_call('GET', 'oauthed', 'query_string', fail=True, nokey=True)
+            self.oauth_call('GET', 'oauthed', 'header', fail=True, nokey=True)
+        finally:
+            self.key = orig_key
 
-    # def test_get_base_query(self):
-    #     """Test get base query with limiting to current partner"""
-    #     self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
-    #     p1 = Partner.query.filter_by(id=self.key.partner_id).first()
-    #     c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
-    #     self.db.session.add_all([c1])
-    #     self.db.session.commit()
-    #     out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
-    #     assert out["pagination"]["total"] == 1, 'found %s != expected %s' % (out["pagination"]["total"], 1)
+    def test_get_base_query(self):
+        """Test get base query with limiting to current partner"""
+        # print dir(hoops.api.partner)
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        p1 = Partner.query.filter_by(id=self.key.partner_id).first()
+        c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
+        self.db.session.add_all([c1])
+        self.db.session.commit()
+        out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
+        assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
 
     def test_create_customer(self):
         """OAuth succeeds for POST requests"""
         self.oauth_call('POST', '/oauth_customers', 'post', fail=False, name='Test Customer 001', my_identifier='testcustomer001')
         pass
 
-    def oauth_call(self, method, target, req_type='query_string', fail=False, **kwargs):
+    def oauth_call(self, method, target, req_type='query_string', fail=False, nokey=False, **kwargs):
         # print self.key
         with self._app.app_context():
-            self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+            if not nokey:
+                self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
             token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
             consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
             params = {

@@ -191,7 +191,7 @@ class APIResource(Resource):
             query = model.query
 
         if kwargs.get('limit_to_partner', False):
-            return query.filter_by(partner=g.partner)
+            return query.filter_by(partner_id=g.partner.id)
         return query
 
 
