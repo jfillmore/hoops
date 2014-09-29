@@ -152,96 +152,100 @@ class TestOAuth(APITestBase):
         """OAuth succeeds for DELETE requests using header"""
         self.oauth_call('DELETE', 'oauthed', 'header', fail=False)
 
-    # def test_oauth2_emulate_restkit(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     headers = req.to_header()
-    #     rv = self.app.get(self.url_for('oauthed'), headers=headers)
-    #     data = json.loads(rv.data)
+    def test_oauth2_emulate_restkit(self):
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        headers = req.to_header()
+        rv = self.app.get(self.url_for('oauthed'), headers=headers)
+        data = json.loads(rv.data)
 
-        # assert data.get('status_code') == 1000, \
-        #     "Expected successful authentication, got: %s " % rv.data
-        # assert data.get('response_data').get('partner_id') == self.partner.id
-        # assert data.get('response_data').get('api_key_id') == self.key.id
+        assert data.get('status_code') == 1000, \
+            "Expected successful authentication, got: %s " % rv.data
+        assert data.get('response_data').get('partner_id') == hoops.api.partner.partner_id
+        assert data.get('response_data').get('api_key_id') == hoops.api.partner.id
 
-    # def test_oauth_missing_parameter(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     del req['oauth_timestamp']
-    #     req.sign_request(signature_method, consumer, token)
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     json.loads(rv.data)
+    def test_oauth_missing_parameter(self):
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        del req['oauth_timestamp']
+        req.sign_request(signature_method, consumer, token)
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     # expecting = hoops.status.library.get('API_MISSING_PARAMETER', parameter='none')
+        # Expecting API_MISSING_PARAMETER
+        expecting = hoops.status.library.get('API_MISSING_PARAMETER', parameter='none')
 
-    #     # assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_expired_timestamp(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()) - 900,
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     data = json.loads(rv.data)
+    def test_oauth_expired_timestamp(self):
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()) - 900,
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     expecting = hoops.status.library.API_EXPIRED_TIMESTAMP
+        # Expecting API_MISSING_PARAMETER
+        expecting = hoops.status.library.API_EXPIRED_TIMESTAMP
 
-    #     assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
-    # def test_oauth_unexpected_sig_type(self):
-    #     token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
-    #     consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
-    #     params = {
-    #         'oauth_version': "1.0",
-    #         'oauth_nonce': oauth.generate_nonce(),
-    #         'oauth_timestamp': int(time.time()),
-    #         'oauth_token': token.key,
-    #         'oauth_consumer_key': consumer.key,
-    #     }
-    #     req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
-    #     signature_method = oauth.SignatureMethod_HMAC_SHA1()
-    #     req.sign_request(signature_method, consumer, token)
-    #     req['oauth_signature_method'] = 'plain'
-    #     rv = self.app.get(self.url_for('oauthed', **req))
-    #     data = json.loads(rv.data)
+    def test_oauth_unexpected_sig_type(self):
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        token = oauth.Token(key=self.key.token, secret=self.key.token_secret)
+        consumer = oauth.Consumer(key=self.key.consumer_key, secret=self.key.consumer_secret)
+        params = {
+            'oauth_version': "1.0",
+            'oauth_nonce': oauth.generate_nonce(),
+            'oauth_timestamp': int(time.time()),
+            'oauth_token': token.key,
+            'oauth_consumer_key': consumer.key,
+        }
+        req = oauth.Request(method='GET', url=self.url_for('oauthed', _external=True), parameters=params)
+        signature_method = oauth.SignatureMethod_HMAC_SHA1()
+        req.sign_request(signature_method, consumer, token)
+        req['oauth_signature_method'] = 'plain'
+        rv = self.app.get(self.url_for('oauthed', **req))
+        data = json.loads(rv.data)
 
-    #     # Expecting API_MISSING_PARAMETER
-    #     expecting = hoops.status.library.API_UNEXPECTED_OAUTH_SIGNATURE_METHOD
+        # Expecting API_MISSING_PARAMETER
+        expecting = hoops.status.library.API_UNEXPECTED_OAUTH_SIGNATURE_METHOD
 
-    #     assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
+        assert data.get('status_code') == expecting.status_code, "Wanted %d got %d" % (expecting.status_code, data.get('status_code'))
 
     # def test_oauth_corrupted_token_secret(self):
     #     """OAuth fails for incorrect token_secret"""
-    #     orig_key = self.key
+    #     orig_key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
 
     #     class fake(object):
     #         def __init__(self, **kwargs):
@@ -258,7 +262,8 @@ class TestOAuth(APITestBase):
     #         self.key = orig_key
 
     # def test_get_base_query(self):
-    #     """TTest get base query with limiting to current partner"""
+    #     """Test get base query with limiting to current partner"""
+    #     self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
     #     p1 = Partner.query.filter_by(id=self.key.partner_id).first()
     #     c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
     #     self.db.session.add_all([c1])

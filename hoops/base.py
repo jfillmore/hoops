@@ -145,7 +145,6 @@ class APIResource(Resource):
         return self.list(**kwargs)
 
     def post(self, **kwargs):
-        print kwargs
         if self.object_id_param in kwargs:
             raise status_library.API_RESOURCE_NOT_FOUND  # Can't POST with arguments in URL
         if self.read_only:
