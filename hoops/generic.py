@@ -78,69 +78,69 @@ class NotSpecified(object):
         return "<unspecified>"
 
 
-# class UpdateOperation(APIModelOperation):
+class UpdateOperation(APIModelOperation):
 
-#     def setup(self, *args, **kwargs):
-#         self.object = self.load_object()
-#         if not self.object.updates_permitted() and not getattr(self, 'force_update', False):
-#             raise status_library.API_FORBIDDEN_UPDATE
+    def setup(self, *args, **kwargs):
+        self.object = self.load_object()
+        if not self.object.updates_permitted() and not getattr(self, 'force_update', False):
+            raise status_library.API_FORBIDDEN_UPDATE
 
-#     def process_request(self, *args, **kwargs):
-#         for param in self.params:
-#             value = self.params.get(param, NotSpecified())
-#             if not isinstance(value, NotSpecified):
-#                 setattr(self.object, param, value)
-#         db.session.add(self.object)
-#         try:
-#             db.session.commit()
-#         except IntegrityError:
-#             db.session.rollback()
-#             # TODO verify that was the case
-#             raise status_library.exception('API_DATABASE_UPDATE_FAILED',
-#                                            resource=self.model.__tablename__)
-#         return APIResponse(self.object)
+    def process_request(self, *args, **kwargs):
+        for param in self.params:
+            value = self.params.get(param, NotSpecified())
+            if not isinstance(value, NotSpecified):
+                setattr(self.object, param, value)
+        db.session.add(self.object)
+        try:
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            # TODO verify that was the case
+            raise status_library.exception('API_DATABASE_UPDATE_FAILED',
+                                           resource=self.model.__tablename__)
+        return APIResponse(self.object)
 
 
-# class include_related(parameter):
+class include_related(parameter):
 
-#     def __init__(self, field, column, validator, description, required=None, default=None):
-#         super(include_related, self).__init__(field, validator, description)
-#         self.column = column
+    def __init__(self, field, column, validator, description, required=None, default=None):
+        super(include_related, self).__init__(field, validator, description)
+        self.column = column
 
-#     def __call__(self, klass):
-#         klass = super(include_related, self).__call__(klass)
-#         if not hasattr(klass, 'related'):
-#             related = {}
-#         else:
-#             related = copy.deepcopy(klass.related)
-#         related[self.field] = self.column
-#         klass.related = related
+    def __call__(self, klass):
+        klass = super(include_related, self).__call__(klass)
+        if not hasattr(klass, 'related'):
+            related = {}
+        else:
+            related = copy.deepcopy(klass.related)
+        related[self.field] = self.column
+        klass.related = related
 
-#         if hasattr(klass, 'orig_process_request'):
-#             return klass
+        if hasattr(klass, 'orig_process_request'):
+            return klass
 
-#         klass.orig_process_request = klass.process_request
+        klass.orig_process_request = klass.process_request
 
-#         def process_request(self, *args, **kwargs):
-#             output = self.orig_process_request(*args, **kwargs)
-#             to_include = [
-#                 self.related[param]
-#                 for param in filter(
-#                     lambda param: self.combined_params.get(param, False),
-#                     self.related.keys()
-#                 )
-#             ]
-#             if not to_include:
-#                 return output
-#             data = output.response['response_data']
-#             if isinstance(data, collections.Iterable):
-#                 output.response['response_data'] = [
-#                     item.to_json(include_subordinate=to_include)
-#                     for item in data
-#                 ]
-#             else:
-#                 output.response['response_data'] = data.to_json(include_subordinate=to_include)
-#             return output
+        def process_request(self, *args, **kwargs):
+            output = self.orig_process_request(*args, **kwargs)
+            to_include = [
+                self.related[param]
+                for param in filter(
+                    lambda param: self.combined_params.get(param, False),
+                    self.related.keys()
+                )
+            ]
+            if not to_include:
+                return output
+            data = output.response['response_data']
+            if isinstance(data, collections.Iterable):
+                output.response['response_data'] = [
+                    item.to_json(include_subordinate=to_include)
+                    for item in data
+                ]
+            else:
+                output.response['response_data'] = data.to_json(include_subordinate=to_include)
+            return output
 
-#         klass.process_request = process_request
-#         return klass
+        klass.process_request = process_request
+        return klass

@@ -3,7 +3,7 @@ from flask import g
 import json
 import restkit.oauth2 as oauth
 import time
-from formencode.validators import String, UnicodeString
+from formencode.validators import String, UnicodeString, Int
 
 from tests.api_tests import APITestBase
 from test_models.core import Partner, Language, Customer, PartnerAPIKey
@@ -15,8 +15,8 @@ import hoops.status
 from test_models import db
 database = db
 from hoops import create_api, register_views
-from hoops.base import APIResource, parameter
-from hoops.generic import ListOperation, CreateOperation
+from hoops.base import APIResource, parameter, url_parameter
+from hoops.generic import ListOperation, CreateOperation, UpdateOperation
 
 
 class OAuthEndpoint(Resource):
@@ -68,6 +68,14 @@ class CreateCustomer(CreateOperation):
     pass
 
 
+@CustomerAPI.method('update')
+@parameter('my_identifier', UnicodeString(max=64, if_missing=None), "Unique identifier of the customer in your database")
+@parameter('name', UnicodeString(max=64, if_missing=None), "Customer name for your reference")
+@url_parameter('customer_id', Int, "Customer ID to edit")
+class UpdateCustomer(UpdateOperation):
+    pass
+
+
 class TestOAuth(APITestBase):
     @classmethod
     def get_app(cls):
@@ -101,7 +109,6 @@ class TestOAuth(APITestBase):
         cls.db.session.refresh(cls.partner)
 
         hoops.api.set_partner(cls.key)
-
 
     def test_oauth_get(self):
         """OAuth succeeds for GET requests"""
@@ -275,9 +282,17 @@ class TestOAuth(APITestBase):
     def test_create_customer(self):
         """OAuth succeeds for POST requests"""
         self.oauth_call('POST', '/oauth_customers', 'post', fail=False, name='Test Customer 001', my_identifier='testcustomer001')
-        pass
 
-    def oauth_call(self, method, target, req_type='query_string', fail=False, nokey=False, **kwargs):
+    def test_updatete_customer(self):
+        """OAuth succeeds for POST requests"""
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        p1 = Partner.query.filter_by(id=self.key.partner_id).first()
+        c1 = Customer(name="TestCustomer01", my_identifier="test_customer_0300", partner=p1, status='active')
+        self.db.session.add_all([c1])
+        self.db.session.commit()
+        self.oauth_call('PUT', '/oauth_customers', 'put', fail=False, put_url_param={'customer_id': c1.id}, name='Test Customer 001-Changed', my_identifier='testcustomer03001')
+
+    def oauth_call(self, method, target, req_type='query_string', fail=False, put_url_param={}, nokey=False, **kwargs):
         # print self.key
         with self._app.app_context():
             if not nokey:
@@ -294,6 +309,9 @@ class TestOAuth(APITestBase):
             if req_type in ['query_string', 'post']:
                 get_params = dict(params, **kwargs)
                 req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True), parameters=get_params)
+            elif req_type in ['put']:
+                get_params = dict(params, **kwargs)
+                req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True, **put_url_param), parameters=get_params)
             else:
                 req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True), parameters=params)
             signature_method = oauth.SignatureMethod_HMAC_SHA1()
@@ -307,6 +325,10 @@ class TestOAuth(APITestBase):
             elif req_type is 'post':
                 url = self.url_for(target, **req)
                 rv = method(self.url_for(target, **req), data=kwargs)
+            elif req_type is 'put':
+                auth = dict(put_url_param, **req)
+                url = self.url_for(target, **auth)
+                rv = method(self.url_for(target, **auth), data=kwargs)
             elif req_type is 'header':
                 url = self.url_for(target)
                 rv = method(url, headers=headers, **kwargs)
