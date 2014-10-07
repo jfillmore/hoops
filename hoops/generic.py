@@ -2,6 +2,8 @@ from flask import g
 from formencode.validators import Int, OneOf, String
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
+import copy
+import collections
 
 from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse

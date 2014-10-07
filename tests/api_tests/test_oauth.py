@@ -6,7 +6,7 @@ import time
 from formencode.validators import String, UnicodeString, Int, StringBool
 
 from tests.api_tests import APITestBase
-from test_models.core import Partner, Language, Customer, PartnerAPIKey
+from test_models.core import Partner, Language, Customer, PartnerAPIKey, User
 from tests import dbhelper
 from hoops.restful import Resource
 from hoops.response import APIResponse
@@ -54,7 +54,7 @@ class CustomerAPI(APIResource):
 
 
 @CustomerAPI.method('list')
-@include_related('partner_id', 'partner', StringBool(if_missing=False), "Includes active partners in output")
+@include_related('include_users', 'users', StringBool(if_missing=False), "Includes active users in output")
 @parameter('include_suspended', String, "Include Suspended", False, False)
 @parameter('include_inactive', String, "Include Inactive", False, False)
 @parameter('limit_to_partner', String, "Limit to partner", False, False)
@@ -274,11 +274,20 @@ class TestOAuth(APITestBase):
         # print dir(hoops.api.partner)
         self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
         p1 = Partner.query.filter_by(id=self.key.partner_id).first()
+        en = Language.query.filter_by(lang='en').first()
+        if not en:
+            en = Language(lang='en', name='English', active=1)
+            db.session.add(en)
+
         c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
-        self.db.session.add_all([c1])
+        u = User(partner=c1.partner, firstname='Varghese', lastname='Chacko', language=en, my_identifier='test_user', email='test@example.in', customer=c1)
+        self.db.session.add_all([c1, u])
         self.db.session.commit()
+        out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1, "include_users": 1})
+        assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
+        assert 'users' in out["response_data"][0], 'Users not included'
+
         out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
-        # print out
         assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
 
     def test_create_customer(self):
