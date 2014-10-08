@@ -148,13 +148,13 @@ class TestOAuth(APITestBase):
 
     def test_oauth_put(self):
         """OAuth succeeds for PUT requests"""
-        self.oauth_call('PUT', 'oauthed', 'post')
+        self.oauth_call('PUT', 'oauthed', 'put')
         self.oauth_call('PUT', 'oauthed', 'header', content_type='application/json', data=json.dumps({"test": 1}))
         self.oauth_call('PUT', 'oauthed', 'header', data='test=123')
 
     def test_oauth_delete_querystring(self):
         """OAuth succeeds for DELETE requests using query string"""
-        self.oauth_call('DELETE', 'oauthed', 'query_string', fail=False)
+        self.oauth_call('DELETE', 'oauthed', 'post', fail=False)
 
     def test_oauth_delete_header(self):
         """OAuth succeeds for DELETE requests using header"""
@@ -317,32 +317,25 @@ class TestOAuth(APITestBase):
                 'oauth_token': token.key,
                 'oauth_consumer_key': consumer.key,
             }
-            if req_type in ['query_string', 'post']:
+            if req_type in ['query_string']:
                 get_params = dict(params, **kwargs)
                 req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True), parameters=get_params)
-            elif req_type in ['put']:
-                get_params = dict(params, **kwargs)
-                req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True, **put_url_param), parameters=get_params)
             else:
-                req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True), parameters=params)
+                req = oauth.Request(method=method.upper(), url=self.url_for(target, _external=True, **put_url_param), parameters=params)
+
             signature_method = oauth.SignatureMethod_HMAC_SHA1()
             req.sign_request(signature_method, consumer, token)
+
             headers = req.to_header()
 
             method = getattr(self.app, method.lower())
+
             if req_type is 'query_string':
-                url = self.url_for(target, **req)
                 rv = method(self.url_for(target, **req))
-            elif req_type is 'post':
-                url = self.url_for(target, **req)
-                rv = method(self.url_for(target, **req), data=kwargs)
-            elif req_type is 'put':
-                auth = dict(put_url_param, **req)
-                url = self.url_for(target, **auth)
-                rv = method(self.url_for(target, **auth), data=kwargs)
+            elif req_type in ['put', 'post']:
+                rv = method(self.url_for(target, _external=True, **put_url_param), headers=headers, data=kwargs)
             elif req_type is 'header':
-                url = self.url_for(target)
-                rv = method(url, headers=headers, **kwargs)
+                rv = method(self.url_for(target, _external=True), headers=headers, **kwargs)
             data = json.loads(rv.data)
 
             if not fail:

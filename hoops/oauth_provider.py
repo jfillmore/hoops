@@ -30,7 +30,14 @@ OAUTH_PARAMS = (
 def oauth_authentication(partner_api_key=None):
     params = {key: value for key, value in request.values.iteritems()}
 
-    oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
+    # print request.base_url, "\n", request.method, "\n", params, "\n", request.headers
+    # print "~~",request.base_url,"~~"
+    if(request.method == 'GET'):
+        oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
+    else:
+        oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, headers=request.headers)
+    
+    
 
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
@@ -54,7 +61,6 @@ def oauth_authentication(partner_api_key=None):
 
     try:
         oauth_request.validate_signature(OAuthSignatureMethod_HMAC_SHA1, consumer, token)
-
         return partner_api_key
 
     except OAuthMissingParameterError as e:
