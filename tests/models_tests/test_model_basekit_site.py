@@ -1,8 +1,9 @@
 from sqlalchemy.exc import IntegrityError
 from tests.api_tests import APITestBase
 from tests.models_tests import ModelsTestBase
-from models.basekit import BaseKitBrand, BaseKitSite
-from models.core import User
+from test_models.basekit import BaseKitBrand, BaseKitSite
+from test_models.core import User
+from test_models.common import BaseModel
 import time
 
 
@@ -62,7 +63,6 @@ class TestBaseKitUserModel(ModelsTestBase):
 
     def test_07_get_the_inherited_class(self):
         ''' Check the inherited BaseModel model class.'''
-        from models.common import BaseModel
         baskekit_site = BaseKitSite()
         assert isinstance(
             baskekit_site, BaseModel), "Test to check inheritance of BaseKitSite from BaseModel failed"

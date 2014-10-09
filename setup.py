@@ -18,9 +18,13 @@ setup(
             'Flask==0.10.1',
             'Flask-RESTful==0.2.11',
             'Flask-Babel==0.9',
+            'Flask-SQLAlchemy==1.0',
+            'SQLAlchemy==0.9.7',
             'Werkzeug==0.9.4',
             'elementtree==1.2.6-20050316',
             'nose==1.3.0',
+            'configobj==5.0.5',
+            'simplejson==3.6.2',
             ],
     dependency_links = [
             'git://github.com/rhooper/python-oauth.git#egg=oauth',

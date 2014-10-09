@@ -1,11 +1,12 @@
-
-from tests.api_tests import APITestBase
-from apps.api.views.base import APIOperation, APIResource, APIModelOperation, parameter, url_parameter
-from formencode.validators import String, Int
-from apps.api.status import library
-from models.core import Customer, Partner, Language, Package, CustomerPackage, User
 from flask import g
-from apps.api.exc import APIException
+from formencode.validators import String, Int
+from hoops.status import library
+from hoops.base import APIOperation, APIModelOperation, APIResource, parameter, url_parameter
+from hoops.generic import ListOperation, RetrieveOperation, NotSpecified, CreateOperation
+from tests.api_tests import APITestBase
+
+from test_models.core import Customer, Partner, Language, Package, CustomerPackage, User
+from hoops.exc import APIException
 
 
 @parameter('test', String, "test")
@@ -36,7 +37,7 @@ class test_model(APIResource):
     read_only = False
 
 
-@test_model.method('retrieve')
+@test_model.method('retrieve', 'customer')
 class CustRetreiveTest(APIModelOperation):
     pass
 
@@ -44,6 +45,42 @@ class CustRetreiveTest(APIModelOperation):
 @test_model.method('update')
 class CustPutTest(APIModelOperation):
     pass
+
+
+class CustomerAPI(APIResource):
+    route = "/customers"
+    object_route = "/customers/<string:customer_id>"
+    object_id_param = 'customer_id'
+    model = Customer
+    read_only = False
+
+
+@CustomerAPI.method('list')
+@parameter('include_suspended', String, "Include Suspended", False, False)
+@parameter('include_inactive', String, "Include Inactive", False, False)
+class ListCustomers(ListOperation):
+    pass
+
+
+@CustomerAPI.method('retrieve')
+@url_parameter('customer_id', Int, "Customer ID")
+class RetrieveCustomer(RetrieveOperation):
+    id_column = 'id'
+
+
+# @CustomerAPI.method('update')
+# @parameter('my_identifier', UnicodeString(max=64, if_missing=NotSpecified()), "Unique identifier of the customer in your database")
+# @parameter('name', UnicodeString(max=64, if_missing=NotSpecified()), "Customer name for your reference")
+# @parameter('status', OneOf(Customer.model._valid_status_values, if_missing=NotSpecified()), "Customer status")
+# @url_parameter('customer_id', Int, "Customer ID")
+# class UpdateCustomer(UpdateOperation):
+#     id_column = 'id'
+#     force_update = True
+
+#     def process_request(self, *args, **kwargs):
+#         if self.params['status'] and not self.model.is_valid_status_transition(self.object.status, self.params['status']):
+#             raise status_library.exception('API_INVALID_STATUS_CHANGE', current=self.object.status, new=self.params['status'])
+#         return super(UpdateCustomer, self).process_request(*args, **kwargs)
 
 
 class TestBaseClasses(APITestBase):
@@ -117,7 +154,7 @@ class TestBaseClasses(APITestBase):
             try:
                 g.partner = partner
                 g.api_key = partner.api_keys.first()
-                op.url_params['customer_id'] = op.url_params['customer_id'] + 1
+                op.url_params['customer_id'] = op.url_params['customer_id'] + 10
                 obj = op.load_object()
                 assert False, "Object load succeeded %s" % obj
             except APIException:
@@ -153,8 +190,8 @@ class TestBaseClasses(APITestBase):
     def test_route_registration(self):
         '''Verify auto-registration works by checking for a couple known routes'''
         assert '/cust/<string:customer_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
-        assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
-        assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        # assert '/users' in [rule.rule for rule in self._app.url_map.iter_rules()]
+        # assert '/users/<string:user_id>' in [rule.rule for rule in self._app.url_map.iter_rules()]
 
     def test_parameter_decorator(self):
         """Test @parameter decorator"""
@@ -210,6 +247,12 @@ class TestBaseClasses(APITestBase):
         assert 'second' in Thing2.url_schema.fields
         assert 'third' in Thing2.url_schema.fields
 
+    def test_nonzero(self):
+        ns = NotSpecified()
+        assert repr(ns) == "<unspecified>"
+        assert str(ns) == "<unspecified>"
+        assert bool(ns) is False
+
     def test_get_base_query(self):
         """Tests the various permutations of include_inactive/include_suspended"""
         lang_en = Language.query.filter_by(lang='en').one()
@@ -222,6 +265,8 @@ class TestBaseClasses(APITestBase):
         p1 = Partner.query.first()
 
         c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
+
+
         c7 = Customer(name="TestCustomer7", my_identifier="test_customer_700", partner=p1, status='active')
         self.db.session.add_all([
             c1,
@@ -252,15 +297,25 @@ class TestBaseClasses(APITestBase):
         ])
 
         self.db.session.commit()
+        customer_id = c1.id
 
         table = (
-            ({}, 3),
-            ({"include_suspended": 1}, 4),
-            ({"include_inactive": 1}, 4),
-            ({"include_suspended": 1, "include_inactive": 1}, 5),
+            ({}, 5),
+            ({"include_suspended": 1}, 6),
+            ({"include_inactive": 1}, 6),
+            ({"include_suspended": 1, "include_inactive": 1}, 7),
         )
         for trial in table:
-            url = self.url_for('customer', **trial[0])
+            url = self.url_for('/customers', **trial[0])
             rv = self.app.get(url)
             out = self.validate(rv, library.API_OK)
             assert out["pagination"]["total"] == trial[1], 'found %s != expected %s for %s' % (out["pagination"]["total"], trial[1], trial[0])
+
+        url = self.url_for('/customers', page=3)
+        rv = self.app.get(url)
+        out = self.validate(rv, library.get('API_VALUE_TOO_HIGH', value='page'))
+
+        url = self.url_for('/customers', customer_id=customer_id)
+        rv = self.app.get(url)
+        out = self.validate(rv, library.API_OK)
+        assert customer_id == out['response_data']['id']

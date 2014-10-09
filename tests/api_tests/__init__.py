@@ -1,10 +1,12 @@
+import simplejson as json
 from tests import TestBase
-from models.core import Partner, Language, PartnerAPIKey, Service, Package, PackageService, PackageServiceParam, Customer, CustomerPackage, User
-from models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
-from apps.api import db, create_app
-import apps.api.status
-
-import json
+from test_models.core import Partner, Language, PartnerAPIKey, Service, Package, PackageService, PackageServiceParam, Customer, CustomerPackage, User
+from test_models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
+from test_models import db
+import hoops.status
+from flask import url_for
+from hoops import create_api, register_views
+api = None
 
 
 class APITestBase(TestBase):
@@ -12,7 +14,11 @@ class APITestBase(TestBase):
     @classmethod
     def get_app(cls):
         cls.db = db
-        return create_app('test')
+        cls.api, app = create_api(database=db,
+                                  flask_conf={'DEBUG': True,
+                                              'ENVIRONMENT_NAME': 'test'})
+        register_views()
+        return app
 
     @classmethod
     def setup_app(cls):
@@ -159,7 +165,7 @@ class APITestBase(TestBase):
 
         try:
             data = json.loads(rv.data)
-        except json.JSONDecodeError as e:
+        except json.decoder.JSONDecodeError as e:
             assert False, 'Failed to decode JSON: %s -- %s' % (e, rv.data)
 
         assert data['status_code'] == message.status_code, \
@@ -174,6 +180,7 @@ class APITestBase(TestBase):
 
         ## Return the JSONdata for further testing.
         return data
+
 
 class BaseKitLeak(Exception):
     pass

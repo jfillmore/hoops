@@ -1,6 +1,6 @@
 
-from config import OutputFormat
-from models.core import Language, Partner, PartnerAPIKey
+from test_config import OutputFormat
+from test_models.core import Language, Partner, PartnerAPIKey
 import random
 from tests import dbhelper
 import unittest

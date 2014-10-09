@@ -1,16 +1,23 @@
 
 from tests.api_tests import APITestBase
-import json
+import simplejson as json
+
+from hoops import create_api
+from hoops.base import APIResource
+from hoops.response import APIResponse
+
+
+class HelloWorld(APIResource):
+    route = '/'
+    def get(self):
+        return APIResponse(["hello", "it works"])
 
 
 class TestAPIApp(APITestBase):
 
     def test_app(self):
-        from apps.api import flask, api, babel, assets
-        assert flask
-        assert api
-        assert babel
-        assert assets is not None
+        assert self._app
+        assert self.api
 
     def test_get(self):
         rv = self.app.get("/")
@@ -23,8 +30,7 @@ class TestAPIApp(APITestBase):
         assert 'hello' in out['response_data']
 
     def test_create_app_with_no_environment(self):
-        from apps.api import create_app
-        app = create_app(environment=None)
+        api, app = create_api(flask_conf={'DEBUG': True, 'ENVIRONMENT_NAME': 'local'})
         assert app.config.get('ENVIRONMENT_NAME') == 'local'
 
     def test_404(self):

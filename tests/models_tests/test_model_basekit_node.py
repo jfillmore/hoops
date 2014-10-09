@@ -1,7 +1,8 @@
 
 from tests.api_tests import APITestBase
 from tests.models_tests import ModelsTestBase
-from models.basekit import BaseKitNode, BaseKitCluster
+from test_models.basekit import BaseKitNode, BaseKitCluster
+from test_models.common import BaseModel
 import time
 
 
@@ -29,7 +30,6 @@ class TestBaseKitNodeModel(ModelsTestBase):
 
     def test_04_get_the_inherited_class(self):
         ''' Check the inherited BaseModel model class. '''
-        from models.common import BaseModel
         baskekit_node = BaseKitNode()
         assert isinstance(
             baskekit_node, BaseModel), "Test to check inheritance from BaseModel failed"

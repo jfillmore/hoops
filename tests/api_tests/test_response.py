@@ -1,6 +1,6 @@
 
-from apps.api.status import library as status
-from apps.api.response import APIResponse
+from hoops.status import library as status
+from hoops.response import APIResponse
 from tests.api_tests import APITestBase
 
 

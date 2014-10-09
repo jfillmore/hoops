@@ -1,16 +1,15 @@
-import copy
-import collections
-
 from flask import g
-from formencode.validators import Int, OneOf, String, StringBool
+from formencode.validators import Int, OneOf, String
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
+import copy
+import collections
 
 from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse
 from hoops.status import library as status_library
 from hoops import db
-
+import hoops
 
 @parameter('limit', Int(min=1, max=100), "Page size", required=False, default=100)
 @parameter('page', Int(min=0), "Page number", required=False, default=1)
@@ -23,6 +22,7 @@ class ListOperation(APIModelOperation):
     def process_request(self, *args, **kwargs):
         super(ListOperation, self).process_request(*args, **kwargs)
         try:
+            # print self.get_base_query()
             pager = self.paginate_query(self.get_base_query())
         except NotFound:
             # 404 is raised when Flask-Alchemy's pagination finds no results with a page > 1
@@ -59,6 +59,7 @@ class CreateOperation(APIModelOperation):
         obj = self.model(**self.params)
         if getattr(self.model, 'partner', None):
             obj.partner = g.partner
+
         db.session.add(obj)
         try:
             db.session.commit()

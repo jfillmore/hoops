@@ -1,8 +1,9 @@
 from tests import TestBase
-from models import db as BaseDB
+from test_models import db as BaseDB
 from tests import dbhelper
-from models.core import Partner, Customer, User, Language
-from config import OutputFormat
+from test_models.core import Partner, Customer, User, Language
+from test_config import OutputFormat
+from hoops import create_api, register_views
 
 
 class ModelsTestBase(TestBase):
@@ -20,3 +21,11 @@ class ModelsTestBase(TestBase):
 
     def _add(self, obj):
         return dbhelper.add(obj, self.db)
+
+    @classmethod
+    def get_app(cls):
+        cls.api, app = create_api(database=cls.db,
+                                  flask_conf={'DEBUG': True,
+                                              'ENVIRONMENT_NAME': 'test'})
+        register_views()
+        return app

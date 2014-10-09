@@ -2,7 +2,7 @@ from functools import wraps
 import json
 import sys
 import traceback
-
+from copy import deepcopy
 from flask.ext import restful
 from flask import make_response, request, Markup, g, current_app
 from werkzeug.exceptions import HTTPException
@@ -13,8 +13,7 @@ from hoops.response import APIResponse
 from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
 from hoops.oauth_provider import oauth_authentication
-
-
+from hoops.utils import Struct
 error_map = {
     200: status_library.API_OK,
     403: status_library.API_FORBIDDEN,
@@ -68,6 +67,12 @@ class API(restful.Api):
         # We don't use the default error handler
         #return super(API, self).handle_error(e)
 
+    def _should_use_fr_error_handler(self):
+        """ Determine if error should be handled with FR or default Flask
+            Return True since we need all errors handled in above handler.
+        """
+        return True
+
     def mediatypes(self):
         """Replaces the acceptable media types with application/json if the request came from a browser.
         Also looks for output_type parameter.
@@ -88,8 +93,19 @@ class OAuthAPI(API):
     '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
 
     def __init__(self, *args, **kwargs):
+        oauth_args = kwargs['oauth_args']
+        del(kwargs['oauth_args'])
         super(API, self).__init__(*args, **kwargs)
         Resource.method_decorators = [require_oauth]
+        Resource.oauth_args = Struct(**oauth_args)
+
+    def set_partner(self, partner):
+        apidict = deepcopy(partner.__dict__)
+        apidict.update({"partner": None})
+        api_key = Struct(**apidict)
+        api_key.partner = Struct(**partner.partner.__dict__)
+        self.partner = api_key
+        Resource.partner = api_key
 
 
 def require_oauth(func):
@@ -98,10 +114,9 @@ def require_oauth(func):
     def wrapper(*args, **kwargs):
         g.partner = None
         g.api_key = None
-
         api_key = oauth_bypass()
         if not api_key:
-            api_key = oauth_authentication()
+            api_key = oauth_authentication(Resource.partner)
 
         if api_key:
             g.partner = api_key.partner
