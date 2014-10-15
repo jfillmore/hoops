@@ -1,7 +1,7 @@
 
 from flask import url_for
 from tests.local import SQLALCHEMY_DATABASE_URI
-from hoops import TestUtilities
+from hoops.utils import TestUtilities
 
 
 class TestBase(object):

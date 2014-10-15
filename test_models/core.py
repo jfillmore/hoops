@@ -3,8 +3,8 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Uniqu
 import re
 from flask_login import UserMixin
 from hoops.utils import random_key_generator
-from test_models.common import BaseModel, SluggableModel, HashableModel
-from test_models import db
+from hoops.utils import BaseModel, SluggableModel, HashableModel
+from hoops import db
 from test_models.basekit import BaseKitSite
 
 

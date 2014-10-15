@@ -2,7 +2,7 @@
 from tests.api_tests import APITestBase
 from tests.models_tests import ModelsTestBase
 from test_models.basekit import BaseKitNode, BaseKitCluster
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 import time
 
 

@@ -54,7 +54,9 @@ class APIOperation(object):
             return schema.to_python(kwargs)
         except Invalid as e:
             if e.error_dict:
-                failures = {field: e.error_dict[field].msg for field in e.error_dict}
+                failures = {}
+                for field in e.error_dict:
+                    failures[field] = e.error_dict[field].msg
             else:
                 failures = {"unknown": e.msg}  # pragma: no cover
             raise APIValidationException(status_library.API_INPUT_VALIDATION_FAILED, failures)
@@ -65,7 +67,9 @@ class APIOperation(object):
             return schema.to_python(self.resource.get_parameters())
         except Invalid as e:
             if e.error_dict:
-                failures = {field: e.error_dict[field].msg for field in e.error_dict}
+                failures = {}
+                for field in e.error_dict:
+                    failures[field] = e.error_dict[field].msg
             else:
                 failures = {"unknown": e.msg}  # pragma: no cover
             raise APIValidationException(status_library.API_INPUT_VALIDATION_FAILED, failures)

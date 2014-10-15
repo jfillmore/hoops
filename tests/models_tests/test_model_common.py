@@ -3,7 +3,7 @@ from tests.local import SQLALCHEMY_DATABASE_URI
 import unittest
 from tests import dbhelper
 from test_models import db
-from test_models.common import BaseModel, SluggableModel
+from hoops.utils import BaseModel, SluggableModel
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship, backref
@@ -11,7 +11,7 @@ from sqlalchemy import Integer, ForeignKey
 import flask_sqlalchemy
 import sqlalchemy.orm
 import re
-from hoops import TestUtilities
+from hoops.utils import TestUtilities
 import time
 
 app = Flask(__name__)

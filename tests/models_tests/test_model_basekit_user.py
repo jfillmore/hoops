@@ -1,5 +1,5 @@
 from test_models.basekit import BaseKitBrand, BaseKitUser
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 from test_models.core import User
 import time
 # from test_models.core import Language

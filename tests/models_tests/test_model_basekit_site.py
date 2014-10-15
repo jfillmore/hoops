@@ -3,7 +3,7 @@ from tests.api_tests import APITestBase
 from tests.models_tests import ModelsTestBase
 from test_models.basekit import BaseKitBrand, BaseKitSite
 from test_models.core import User
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 import time
 
 

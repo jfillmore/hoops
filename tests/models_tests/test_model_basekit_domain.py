@@ -1,7 +1,7 @@
 
 from sqlalchemy.exc import IntegrityError
 from test_models.basekit import BaseKitSite, BaseKitDomain
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
 import time

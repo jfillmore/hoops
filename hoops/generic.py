@@ -9,7 +9,7 @@ from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse
 from hoops.status import library as status_library
 from hoops import db
-import hoops
+
 
 @parameter('limit', Int(min=1, max=100), "Page size", required=False, default=100)
 @parameter('page', Int(min=0), "Page number", required=False, default=1)
@@ -100,6 +100,34 @@ class UpdateOperation(APIModelOperation):
             # TODO verify that was the case
             raise status_library.exception('API_DATABASE_UPDATE_FAILED',
                                            resource=self.model.__tablename__)
+        return APIResponse(self.object)
+
+
+class DeleteOperation(APIModelOperation):
+
+    def setup(self, *args, **kwargs):
+        self.object = self.load_object()
+        if not self.object.updates_permitted() and not getattr(self, 'force_delete', False):
+            raise status_library.API_FORBIDDEN_DELETE
+
+    def process_request(self, *args, **kwargs):
+        try:
+            if hasattr(self.object, 'status'):
+                setattr(self.object, 'status', 'deleted')    # TODO: Fix code fior fields active/enabled/disabled
+            else:
+                raise status_library.exception('API_DATABASE_DELETE_FAILED',
+                                               resource=self.model.__tablename__)
+
+            db.session.add(self.object)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            # TODO verify that was the case
+            raise status_library.exception('API_DATABASE_UPDATE_FAILED',
+                                           resource=self.model.__tablename__)
+        except:
+            raise
+
         return APIResponse(self.object)
 
 

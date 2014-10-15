@@ -75,13 +75,10 @@ class StatusLibrary(object):
         'API_OK': (200, 1000, u'Ok'),
         'API_NO_RECORDS_FOUND': (200, 1004, u'No records found'),
 
-        # 4xxx
+        # 4xxx - Input errors (mostly validation errors)
         'API_BAD_REQUEST': (400, 4000, u'The API request can\'t be fulfilled due to bad syntax in URL'),
         'API_UNAUTHORIZED_ACCESS': (401, 4001, u'The API request has not been authenticated'),
         'API_FORBIDDEN': (403, 4003, u'The API request is not allowed.'),
-        'API_FORBIDDEN_ACCESS': (401, 4203, u'Forbidden - The %(child_resource)s belongs to another %(parent_resource)s'),
-        'API_FORBIDDEN_DELETE': (401, 4205, u'Cannot delete a %(parent_resource)s with active users or services'),
-        'API_FORBIDDEN_UPDATE': (401, 4206, u'Update not permitted'),
         'API_RESOURCE_NOT_FOUND': (404, 4004, u'Couldn\'t find the requested resource'),
         'API_INVALID_REQUEST_METHOD': (405, 4005, u'Method not supported'),
         'API_CONTENT_NOT_ACCEPTED': (406, 4006, u'The API request can\'t be fulfilled due to unsupported response content'),
@@ -115,10 +112,14 @@ class StatusLibrary(object):
         'API_INVALID_VALUE': (400, 4109, u'Invalid value \'%(value)s\''),
         'API_DONOT_ACCEPT_PARAM': (400, 4116, u'%(key)s can\'t be specified in parameter list.'),
         'API_UNEXPECTED_INPUT_PARAMETER': (400, 4117, u'%(key)s can\'t be updated in %(model)s model'),
-        'API_DATABASE_UPDATE_FAILED': (400, 4119, u'Requested %(resource)s could not be updated with the given parameters'),
 
         #42xx
         'API_DATABASE_RESOURCE_NOT_FOUND': (404, 4204, u"Requested %(resource)s not found"),
+        'API_FORBIDDEN_ACCESS': (401, 4203, u'Forbidden - The %(child_resource)s belongs to another %(parent_resource)s'),
+        'API_FORBIDDEN_DELETE': (401, 4205, u'Cannot delete a %(parent_resource)s with active users or services'),
+        'API_FORBIDDEN_UPDATE': (401, 4206, u'Update not permitted'),
+        'API_DATABASE_UPDATE_FAILED': (400, 4220, u'Requested %(resource)s could not be updated with the given parameters'),
+        'API_DATABASE_DELETE_FAILED': (400, 4221, u'Requested %(resource)s could not be deleted'),
 
         # 43xx
         'API_AUTHENTICATION_ERROR': (401, 4300, u'Authentication error'),

@@ -16,7 +16,7 @@ from test_models import db
 database = db
 from hoops import create_api, register_views
 from hoops.base import APIResource, parameter, url_parameter
-from hoops.generic import ListOperation, CreateOperation, UpdateOperation, include_related
+from hoops.generic import ListOperation, CreateOperation, UpdateOperation, DeleteOperation, include_related
 
 
 class OAuthEndpoint(Resource):
@@ -74,6 +74,12 @@ class CreateCustomer(CreateOperation):
 @parameter('name', UnicodeString(max=64, if_missing=None), "Customer name for your reference")
 @url_parameter('customer_id', Int, "Customer ID to edit")
 class UpdateCustomer(UpdateOperation):
+    pass
+
+
+@CustomerAPI.method('remove')
+@url_parameter('customer_id', Int, "Customer ID to edit")
+class DeleteCustomer(DeleteOperation):
     pass
 
 
@@ -284,11 +290,11 @@ class TestOAuth(APITestBase):
         self.db.session.add_all([c1, u])
         self.db.session.commit()
         out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1, "include_users": 1})
-        assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
+        assert out["pagination"]["total"] == 3, 'found %s != expected %s' % (out["pagination"]["total"], 1)
         assert 'users' in out["response_data"][0], 'Users not included'
 
         out = self.oauth_call('GET', '/oauth_customers', 'query_string', fail=False, **{"include_suspended": 1, "include_inactive": 1, "limit_to_partner": 1})
-        assert out["pagination"]["total"] == 2, 'found %s != expected %s' % (out["pagination"]["total"], 1)
+        assert out["pagination"]["total"] == 3, 'found %s != expected %s' % (out["pagination"]["total"], 1)
 
     def test_create_customer(self):
         """OAuth succeeds for POST requests"""
@@ -302,6 +308,17 @@ class TestOAuth(APITestBase):
         self.db.session.add_all([c1])
         self.db.session.commit()
         self.oauth_call('PUT', '/oauth_customers', 'put', fail=False, put_url_param={'customer_id': c1.id}, name='Test Customer 001-Changed', my_identifier='testcustomer03001')
+
+    def test_delete_customer(self):
+        self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
+        p1 = Partner.query.filter_by(id=self.key.partner_id).first()
+        c1 = Customer(name="TestCustomer04", my_identifier="test_customer_0400", partner=p1, status='active')
+        self.db.session.add_all([c1])
+        self.db.session.commit()
+
+        out = self.oauth_call('DELETE', '/oauth_customers', 'delete', fail=False, put_url_param={'customer_id': c1.id})
+        assert out['response_data']['status'] == 'deleted'
+
 
     def oauth_call(self, method, target, req_type='query_string', fail=False, put_url_param={}, nokey=False, **kwargs):
         # print self.key
@@ -332,7 +349,7 @@ class TestOAuth(APITestBase):
 
             if req_type is 'query_string':
                 rv = method(self.url_for(target, **req))
-            elif req_type in ['put', 'post']:
+            elif req_type in ['put', 'post', 'delete']:
                 rv = method(self.url_for(target, _external=True, **put_url_param), headers=headers, data=kwargs)
             elif req_type is 'header':
                 rv = method(self.url_for(target, _external=True), headers=headers, **kwargs)

@@ -1,5 +1,5 @@
 from tests.models_tests import ModelsTestBase
-from test_models.common import SluggableModel
+from hoops.utils import SluggableModel
 from test_models.basekit import BaseKitCluster
 from sqlalchemy.exc import IntegrityError
 import time

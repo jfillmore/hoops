@@ -3,7 +3,7 @@ from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
 from test_models.basekit import BaseKitPackageTemplate, BaseKitProvisioningHelper, BaseKitPackage, BaseKitCluster, BaseKitSite
 from test_models.core import Package, Partner, User, Customer
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 import time
 
 

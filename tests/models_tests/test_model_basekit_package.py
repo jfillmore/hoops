@@ -1,4 +1,4 @@
-from test_models.common import BaseModel
+from hoops.utils import BaseModel
 from test_models.basekit import BaseKitCluster, BaseKitBrand, BaseKitPackage
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
