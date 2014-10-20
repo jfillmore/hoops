@@ -1,6 +1,6 @@
 
 from tests.api_tests import APITestBase
-from apps.api.status import MissingParameterError, APIStatus, library
+from hoops.status import MissingParameterError, APIStatus, library
 import unittest
 
 

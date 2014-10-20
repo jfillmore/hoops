@@ -1,8 +1,8 @@
 from tests.models_tests import ModelsTestBase
-from models.core import Partner, Language, Package, Customer, PackageService, Service
-from config import OutputFormat
+from test_models.core import Partner, Language, Package, Customer, PackageService, Service
+from test_config import OutputFormat
 from tests import dbhelper
-from models import db
+from test_models import db
 
 
 class TestPackageModel(ModelsTestBase):

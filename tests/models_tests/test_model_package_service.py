@@ -1,6 +1,6 @@
 from tests.models_tests import ModelsTestBase
-from config import OutputFormat
-from models.core import PackageService, Package, Language, Partner, Service, PackageServiceParam
+from test_config import OutputFormat
+from test_models.core import PackageService, Package, Language, Partner, Service, PackageServiceParam
 
 
 class TestPackageServiceModel(ModelsTestBase):

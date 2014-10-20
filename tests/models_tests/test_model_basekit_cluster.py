@@ -1,5 +1,6 @@
 from tests.models_tests import ModelsTestBase
-from models.basekit import BaseKitCluster
+from hoops.utils import SluggableModel
+from test_models.basekit import BaseKitCluster
 from sqlalchemy.exc import IntegrityError
 import time
 
@@ -60,7 +61,6 @@ class TestBaseKitClusterModel(ModelsTestBase):
 
     def test_06_get_the_inherited_class(self):
         ''' Check the inherited SluggableModel model class. '''
-        from models.common import SluggableModel
         baskekit_cluster = BaseKitCluster()
         assert isinstance(baskekit_cluster, SluggableModel), "Test to check inheritance from SluggableModel failed"
 

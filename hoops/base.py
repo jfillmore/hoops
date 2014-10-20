@@ -13,7 +13,6 @@ from hoops.status import library as status_library
 
 
 class APIOperation(object):
-
     def __call__(self, *args, **kwargs):
         self.url_params = self.validate_url(**kwargs)
         self.params = self.validate_input()
@@ -55,7 +54,9 @@ class APIOperation(object):
             return schema.to_python(kwargs)
         except Invalid as e:
             if e.error_dict:
-                failures = {field: e.error_dict[field].msg for field in e.error_dict}
+                failures = {}
+                for field in e.error_dict:
+                    failures[field] = e.error_dict[field].msg
             else:
                 failures = {"unknown": e.msg}  # pragma: no cover
             raise APIValidationException(status_library.API_INPUT_VALIDATION_FAILED, failures)
@@ -66,7 +67,9 @@ class APIOperation(object):
             return schema.to_python(self.resource.get_parameters())
         except Invalid as e:
             if e.error_dict:
-                failures = {field: e.error_dict[field].msg for field in e.error_dict}
+                failures = {}
+                for field in e.error_dict:
+                    failures[field] = e.error_dict[field].msg
             else:
                 failures = {"unknown": e.msg}  # pragma: no cover
             raise APIValidationException(status_library.API_INPUT_VALIDATION_FAILED, failures)
@@ -108,6 +111,7 @@ class APIResource(Resource):
     model = None
     read_only = True
     object_id_param = None
+    endpoint = None
 
     create = UnimplementedOperation()
     retrieve = UnimplementedOperation()
@@ -128,7 +132,7 @@ class APIResource(Resource):
             return purge_oauth_keys(request.form)
 
     @classmethod
-    def method(self, method):
+    def method(self, method, endpoint=None):
         '''
         Decorator to bind a callable as the handler for a method.
         It sets the resource property on the callable to be the parent resource.
@@ -146,32 +150,53 @@ class APIResource(Resource):
 
     def post(self, **kwargs):
         if self.object_id_param in kwargs:
-            abort(404)  # Can't POST with arguments in URL
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't POST with arguments in URL
         if self.read_only:
             abort(405)
         return self.create(**kwargs)
 
     def put(self, **kwargs):
         if not self.object_id_param in kwargs:
-            abort(404)  # Can't PUT without arguments (that may have an ID)
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't PUT without arguments (that may have an ID)
         if self.read_only:
             abort(405)
         return self.update(**kwargs)
 
     def delete(self, **kwargs):
         if not self.object_id_param in kwargs:
-            abort(404)  # Can't DELETE without arguments (that may have an ID)
+            raise status_library.API_RESOURCE_NOT_FOUND  # Can't DELETE without arguments (that may have an ID)
         if self.read_only:
             abort(405)
         return self.remove(**kwargs)
 
     @classmethod
     def register(cls):
-        routes = [cls.route]
+
+        routes = [cls.route] if cls.route else []
         object_route = getattr(cls, 'object_route', None)
         if object_route:
             routes.append(object_route)
-        hoops.api.add_resource(cls, *routes)
+        if routes:
+            hoops.api.add_resource(cls, *routes, endpoint=cls.route)
+
+    @classmethod
+    def get_base_query(self, **kwargs):
+        include_inactive = kwargs.get('include_inactive', False)
+        include_suspended = kwargs.get('include_suspended', False)
+
+        model = self.model
+        if not (include_suspended or include_inactive):
+            query = model.query_active
+        elif include_suspended and not include_inactive:
+            query = model.query_active_or_suspended
+        elif include_inactive and not include_suspended:
+            query = model.query_all_except_suspended
+        else:
+            query = model.query
+
+        if kwargs.get('limit_to_partner', False):
+            return query.filter_by(partner_id=g.partner.id)
+        return query
 
 
 class base_parameter(object):

@@ -1,10 +1,9 @@
-import copy
-import collections
-
 from flask import g
-from formencode.validators import Int, OneOf, String, StringBool
+from formencode.validators import Int, OneOf, String
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
+import copy
+import collections
 
 from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse
@@ -23,6 +22,7 @@ class ListOperation(APIModelOperation):
     def process_request(self, *args, **kwargs):
         super(ListOperation, self).process_request(*args, **kwargs)
         try:
+            # print self.get_base_query()
             pager = self.paginate_query(self.get_base_query())
         except NotFound:
             # 404 is raised when Flask-Alchemy's pagination finds no results with a page > 1
@@ -59,6 +59,7 @@ class CreateOperation(APIModelOperation):
         obj = self.model(**self.params)
         if getattr(self.model, 'partner', None):
             obj.partner = g.partner
+
         db.session.add(obj)
         try:
             db.session.commit()
@@ -99,6 +100,34 @@ class UpdateOperation(APIModelOperation):
             # TODO verify that was the case
             raise status_library.exception('API_DATABASE_UPDATE_FAILED',
                                            resource=self.model.__tablename__)
+        return APIResponse(self.object)
+
+
+class DeleteOperation(APIModelOperation):
+
+    def setup(self, *args, **kwargs):
+        self.object = self.load_object()
+        if not self.object.updates_permitted() and not getattr(self, 'force_delete', False):
+            raise status_library.API_FORBIDDEN_DELETE
+
+    def process_request(self, *args, **kwargs):
+        try:
+            if hasattr(self.object, 'status'):
+                setattr(self.object, 'status', 'deleted')    # TODO: Fix code fior fields active/enabled/disabled
+            else:
+                raise status_library.exception('API_DATABASE_DELETE_FAILED',
+                                               resource=self.model.__tablename__)
+
+            db.session.add(self.object)
+            db.session.commit()
+        except IntegrityError:
+            db.session.rollback()
+            # TODO verify that was the case
+            raise status_library.exception('API_DATABASE_UPDATE_FAILED',
+                                           resource=self.model.__tablename__)
+        except:
+            raise
+
         return APIResponse(self.object)
 
 

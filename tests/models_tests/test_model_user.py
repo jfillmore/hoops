@@ -1,7 +1,7 @@
 from tests.models_tests import ModelsTestBase
 from tests import dbhelper
-from models.core import User, Language, Partner, Customer
-from models import db
+from test_models.core import User, Language, Partner, Customer
+from test_models import db
 from sqlalchemy.exc import IntegrityError
 
 

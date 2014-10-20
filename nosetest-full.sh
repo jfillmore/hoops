@@ -35,11 +35,9 @@ clear_pyc() {
 clear_pyc
 $NOSETESTS \
     --with-coverage \
-    --cover-package=models \
+    --cover-package=hoops \
     --cover-branches \
     --cover-erase \
-    --cover-package=jetlaunch \
-    --cover-package=apps \
     $@
 clear_pyc
 

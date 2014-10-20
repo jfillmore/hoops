@@ -1,4 +1,5 @@
-from models.basekit import BaseKitCluster, BaseKitBrand, BaseKitPackage
+from hoops.utils import BaseModel
+from test_models.basekit import BaseKitCluster, BaseKitBrand, BaseKitPackage
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase
 from sqlalchemy.exc import IntegrityError
@@ -40,7 +41,6 @@ class TestBaseKitBrandModel(ModelsTestBase):
 
     def test_05_get_the_inherited_class(self):
         ''' Check the inherited BaseModel model class.'''
-        from models.common import BaseModel
         baskekit_package = BaseKitPackage()
         assert isinstance(
             baskekit_package, BaseModel), "Test to check inheritance of BaseKitPackage from BaseModel failed"

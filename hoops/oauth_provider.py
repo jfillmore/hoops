@@ -4,14 +4,12 @@ from oauth import OAuthRequest, OAuthError, OAuthMissingParameterError
 from oauth.signature_method.hmac_sha1 import OAuthSignatureMethod_HMAC_SHA1
 
 from hoops.status import library as status
-# FIXME: partner_api_key from PartnerAPIKey
-# from models.core import PartnerAPIKey
 
 
 # TODO: support a mechanism for specifying how the oauth keys will be loaded
 # e.g.
-#   1. User passes in the keys to authorize against
-#   2. User passes in functions to invoke to get keys
+#   1. User passes in the keys to authorize against - Done
+#   2. User passes in functions to invoke to get keys - Done
 #   3. User passes in a table/model with a specific schema
 
 OAUTH_PARAMS = (
@@ -29,19 +27,28 @@ OAUTH_PARAMS = (
 )
 
 
-def oauth_authentication():
+def oauth_authentication(partner_api_key=None):
     params = {key: value for key, value in request.values.iteritems()}
-    oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
+
+    # print request.base_url, "\n", request.method, "\n", params, "\n", request.headers
+    # print "~~",request.base_url,"~~"
+    if(request.method == 'GET'):
+        oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
+    else:
+        oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, headers=request.headers)
+    
+    
 
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
 
-    # FIXME: partner_api_key from PartnerAPIKey
-    # partner_api_key = .query_active.filter_by(
-    #     consumer_key=oauth_request.params.get('oauth_consumer_key')).first()
-    partner_api_key = 'WRONG_KEY'
+    # print partner_api_key.partner.enabled
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
+
+    # consumer_key_string = 'oauth_consumer_key="' + partner_api_key.consumer_key + '"'
+    # if not consumer_key_string in str(request.headers):
+    #     raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 
     consumer = {
         'oauth_consumer_key': partner_api_key.consumer_key,
@@ -53,9 +60,7 @@ def oauth_authentication():
     }
 
     try:
-        oauth_request.validate_signature(
-            OAuthSignatureMethod_HMAC_SHA1, consumer, token)
-
+        oauth_request.validate_signature(OAuthSignatureMethod_HMAC_SHA1, consumer, token)
         return partner_api_key
 
     except OAuthMissingParameterError as e:

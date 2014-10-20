@@ -2,9 +2,9 @@
 
 from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
-from config import OutputFormat
-from models.core import Language, Partner, PartnerUser
-from models.common import HashableModel
+from test_config import OutputFormat
+from test_models.core import Language, Partner, PartnerUser
+from hoops.utils import HashableModel
 from tests.models_tests import ModelsTestBase
 from tests import dbhelper
 import time

@@ -1,7 +1,7 @@
 import unittest
 from sqlalchemy import event
 from sqlalchemy import Column, String
-from models.hashpass import HashedPasswordMixin, hash_password_before_change_listener
+from hoops.utils import HashedPasswordMixin, hash_password_before_change_listener
 from tests.models_tests import ModelsTestBase, BaseDB as db
 from coaster.sqlalchemy import BaseMixin
 
