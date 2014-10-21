@@ -14,6 +14,8 @@ from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
 from hoops.oauth_provider import oauth_authentication
 from hoops.utils import Struct
+import logging
+
 error_map = {
     200: status_library.API_OK,
     403: status_library.API_FORBIDDEN,
@@ -22,6 +24,9 @@ error_map = {
     500: status_library.API_UNHANDLED_EXCEPTION,
     501: status_library.API_CODE_NOT_IMPLEMENTED,
 }
+
+logger = logging.getLogger('api.error')
+error_logger = logging.getLogger('error')
 
 
 class Resource(restful.Resource):
@@ -37,7 +42,22 @@ class API(restful.Api):
             'application/json': output_json,
         }
 
+    def make_response(self, *args, **kwargs):
+        response = restful.Api.make_response(self, *args, **kwargs)
+
+        try:
+            message = getattr(args[0], 'response', None).get('status_message', None)
+        except:
+            message = args[0]
+
+        logger.error('%s: %s', response.data, message)
+        if response.status_code >= 500:
+            error_logger.exception('%s: %s', response.data, message)
+
+        return response
+
     def handle_error(self, e):
+
         if isinstance(e, HTTPException):
             return self.make_response(
                 APIResponse(None, status=error_map.get(e.code, APIStatus(http_status=e.code, status_code=e.code * 10, message=e.description))),
@@ -51,7 +71,6 @@ class API(restful.Api):
                 APIResponse(None, status=e.status),
                 e.status.http_status)
 
-        # TODO add logging here
         status = status_library.API_UNHANDLED_EXCEPTION
         if current_app.config.get('DEBUG'):
             tb_info = sys.exc_info()

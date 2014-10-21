@@ -1,0 +1,40 @@
+version: 1
+formatters:
+  standard:
+    format: '%(levelname)s %(name)s %(request_uid)s [%(asctime)s]: %(message)s'
+    (): ext://hoops.logger.UTCFormatter
+  logstash:
+    (): ext://logstash_formatter.LogstashFormatter
+    format: '{"extra": {"app_name": "hoops", "hide": false}}'
+
+filters:
+  request_context:
+    (): hoops.logger.ContextFilter
+
+handlers:
+  test:
+    level: DEBUG
+    class: logging.FileHandler
+    filename: {log_path}/{app_name}_test.log
+    formatter: standard
+    filters:
+      - request_context
+
+loggers:
+  test:
+    level: INFO
+    propagate: True
+    handlers:
+      - test
+
+  api:
+    level: DEBUG
+    propagate: True
+    handlers:
+    - test
+
+  error:
+    level: DEBUG
+    propagate: True
+    handlers:
+    - test

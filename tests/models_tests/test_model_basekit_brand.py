@@ -1,7 +1,7 @@
 
 from sqlalchemy.exc import IntegrityError
 from test_models.basekit import BaseKitCluster, BaseKitBrand
-from hoops.utils import SluggableModel
+from hoops.common import SluggableModel
 from test_models.core import Partner
 from tests.models_tests import ModelsTestBase
 from tests.api_tests import APITestBase

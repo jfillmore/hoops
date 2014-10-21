@@ -65,7 +65,7 @@ class TestCustomerModels(ModelsTestBase):
 
     def test_06_get_the_inherited_class(self):
         ''' Check the inherited model class. '''
-        from hoops.utils import BaseModel
+        from hoops.common import BaseModel
         _customer = Customer()
         assert isinstance(
             _customer, BaseModel), "Test to check inheritance from BaseModel failed"

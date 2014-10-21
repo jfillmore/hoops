@@ -1,10 +1,88 @@
-
 import re
 import datetime
+
 from coaster.sqlalchemy import BaseMixin
 from sqlalchemy import event
+from passlib.hash import sha512_crypt
+
+
 from hoops import db
-from hoops.utils import Slugify, slugify_before_insert_listener, HashedPasswordMixin, hash_password_before_change_listener
+
+
+class Slugify:
+    """Mix-in class to provide standard slug generation abilities.
+
+    Uses __slug__attribute__ to determine which field to use for slug generation.
+
+    See also slugify_before_insert_listener and generate_slug.
+
+    """
+    def generate_slug(self):
+        return generate_slug(getattr(self, self.__slug_attribute__))
+
+
+def slugify_before_insert_listener(mapper, connection, target):
+    """Event handler to auto-generate a slug on insert.
+
+    Use this in conjunction with Slugify
+
+    Example usage:
+        event.listen(Category, 'before_insert', slugify_before_insert_listener)
+
+    """
+
+    if not getattr(target, target.__slug_container__):
+        setattr(target, target.__slug_container__, target.generate_slug())
+
+
+def generate_slug(field_value):
+    """Basic slug generator - strips non-word characters and non-dashes and converts them to dashes."""
+    return re.sub(r'^-|-$', '', re.sub(r'[^-\w]+', '-', field_value).lower())
+
+
+class HashedPasswordMixin:
+    """Class to save password hash.
+
+    See also hash_password_before_change_listener and generate_hash.
+
+    """
+    def generate_hash(self):
+        return generate_hash(getattr(self, self.__hash_attribute__))
+
+    def is_valid_password(self, password_text=None):
+        if password_text:
+            try:
+                if getattr(self, 'enabled'):
+                    return verify_hash(password_text, getattr(self, self.__hash_attribute__))
+            except AttributeError:
+                return verify_hash(password_text, getattr(self, self.__hash_attribute__))
+        return None
+
+
+def hash_password_before_change_listener(mapper, connection, target):
+    """Event handler to auto-generate a hash before insert.
+
+    Use this in conjunction with HashedPasswordMixin
+
+    Example usage:
+        event.listen(AdminUser, 'before_insert', hash_password_before_change_listener)
+
+    """
+    password = getattr(target, target.__hash_attribute__)
+    if (password is not None and password is not '' and not re.match(r'^\$', password)):
+        setattr(target, target.__hash_attribute__, target.generate_hash())
+
+
+def generate_hash(field_value):
+    """Basic hash generator"""
+    return sha512_crypt.encrypt(field_value)
+
+
+def verify_hash(string_value, hash_value):
+    """Verify that the passed string corressponds to the specified hash value."""
+    if hash_value is None or hash_value == u'':
+        return False
+    return sha512_crypt.verify(string_value, hash_value)
 
 
 class ActiveQuery(object):

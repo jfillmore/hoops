@@ -12,7 +12,7 @@ from .restful import API, OAuthAPI
 import hoops.json_add_to_json_hack
 from .utils import find_subclasses
 from .base import APIResource
-
+from .logger import configure_logging
 
 flask = None
 api = None
@@ -20,6 +20,7 @@ assets = None
 babel = None
 
 __all__ = ['create_api', 'register_views', 'db']
+
 
 def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oauth_args=None):
     '''
@@ -57,8 +58,10 @@ def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oa
         hoops.db = database
         # print hoops.db
 
+    configure_logging(flask.config.get('LOG_CONFIG'), flask.config.get('LOG_LEVEL'), flask.config.get('LOG_PATH'), app_name)
+
     return api, flask
 
-
+    
 def register_views():
     [sub.register() for sub in find_subclasses(APIResource)]

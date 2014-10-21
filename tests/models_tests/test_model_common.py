@@ -3,7 +3,7 @@ from tests.local import SQLALCHEMY_DATABASE_URI
 import unittest
 from tests import dbhelper
 from test_models import db
-from hoops.utils import BaseModel, SluggableModel
+from hoops.common import BaseModel, SluggableModel
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
 from sqlalchemy.orm import relationship, backref

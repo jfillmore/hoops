@@ -1,5 +1,36 @@
+import random
+import hashlib
+import base64
 from sqlalchemy.engine import reflection
 from sqlalchemy.schema import MetaData, Table, DropTable, ForeignKeyConstraint, DropConstraint
+
+__all__ = ["Struct", "random_key_generator", "find_subclasses"]
+
+
+class Struct(object):
+    def __init__(self, **entries):
+        self.__dict__.update(entries)
+
+
+def random_key_generator():
+    """ Method to generate random keys. It can be used to generate token, toke_secret etc.
+    """
+    return base64.b64encode(hashlib.sha256(str(random.getrandbits(256)))
+                            .digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('==')
+
+
+def find_subclasses(cls):
+    ''' Find all subclasses of given class
+        cls - Any class whose subclass to be found
+    '''
+    subclasses = None
+    try:
+        subclasses = cls.__subclasses__()
+        for d in list(subclasses):
+            subclasses.extend(find_subclasses(d))
+    except:
+        pass
+    return subclasses
 
 
 class TestUtilities(object):

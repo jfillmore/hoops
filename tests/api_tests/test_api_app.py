@@ -18,6 +18,7 @@ class TestAPIApp(APITestBase):
     def test_app(self):
         assert self._app
         assert self.api
+        
 
     def test_get(self):
         rv = self.app.get("/")
