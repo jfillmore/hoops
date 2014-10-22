@@ -2,7 +2,7 @@
 
 from flask_login import UserMixin
 from sqlalchemy.exc import IntegrityError
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from test_models.core import Language, Partner, PartnerUser
 from hoops.common import HashableModel
 from tests.models_tests import ModelsTestBase

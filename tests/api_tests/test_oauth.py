@@ -5,18 +5,16 @@ import restkit.oauth2 as oauth
 import time
 from formencode.validators import String, UnicodeString, Int, StringBool
 
-from tests.api_tests import APITestBase
+from tests.api_tests import APITestBase, config_file, db_config
 from test_models.core import Partner, Language, Customer, PartnerAPIKey, User
 from tests import dbhelper
 from hoops.restful import Resource
 from hoops.response import APIResponse
 import hoops
 import hoops.status
-from hoops import db, create_api, register_views
+from hoops import create_api
 from hoops.base import APIResource, parameter, url_parameter
 from hoops.generic import ListOperation, CreateOperation, UpdateOperation, DeleteOperation, include_related
-
-database = db
 
 
 class OAuthEndpoint(Resource):
@@ -86,19 +84,18 @@ class DeleteCustomer(DeleteOperation):
 class TestOAuth(APITestBase):
     @classmethod
     def get_app(cls):
-        cls.db = db
-
         oauth_args = {'consumer_key': None,
                       'consumer_secret': None,
                       'token': None,
                       'token_secret': None}
-        cls.api, app = create_api(database=db,
-                                  flask_conf={'DEBUG': True,
-                                              'ENVIRONMENT_NAME': 'test'},
-                                  app_name='hoops',
-                                  oauth_args=oauth_args)
 
-        register_views()
+        app, cls.db = create_api(db_config=db_config,
+                                 config_file=config_file,
+                                 flask_conf={'DEBUG': True,
+                                             'ENVIRONMENT_NAME': 'test'},
+                                 app_name='hoops',
+                                 oauth_args=oauth_args)
+
         return app
 
     @classmethod
@@ -278,13 +275,13 @@ class TestOAuth(APITestBase):
 
     def test_get_base_query(self):
         """Test get base query with limiting to current partner"""
-        # print dir(hoops.api.partner)
+
         self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
         p1 = Partner.query.filter_by(id=self.key.partner_id).first()
         en = Language.query.filter_by(lang='en').first()
         if not en:
             en = Language(lang='en', name='English', active=1)
-            db.session.add(en)
+            self.db.session.add(en)
 
         c1 = Customer(name="TestCustomer1", my_identifier="test_customer_300", partner=p1, status='active')
         u = User(partner=c1.partner, firstname='Varghese', lastname='Chacko', language=en, my_identifier='test_user', email='test@example.in', customer=c1)
@@ -321,7 +318,7 @@ class TestOAuth(APITestBase):
         assert out['response_data']['status'] == 'deleted'
 
     def oauth_call(self, method, target, req_type='query_string', fail=False, put_url_param={}, nokey=False, **kwargs):
-        # print self.key
+
         with self._app.app_context():
             if not nokey:
                 self.key = PartnerAPIKey.query.filter_by(id=hoops.api.partner.id).first()
@@ -385,18 +382,16 @@ class TestInvalidOAuth(APITestBase):
 
     @classmethod
     def get_app(cls):
-        cls.db = db
-        # print "### => ", db
         oauth_args = {'consumer_key': None,
                       'consumer_secret': None,
                       'token': None,
                       'token_secret': None}
-        cls.api, app = create_api(database=db,
-                                  flask_conf={'DEBUG': True,
-                                              'ENVIRONMENT_NAME': 'test'},
-                                  app_name='hoops',
-                                  oauth_args=oauth_args)
-        register_views()
+        app, cls.db = create_api(db_config=db_config,
+                                 config_file=config_file,
+                                 flask_conf={'DEBUG': True,
+                                             'ENVIRONMENT_NAME': 'test'},
+                                 app_name='hoops',
+                                 oauth_args=oauth_args)
         return app
 
     @classmethod
@@ -406,7 +401,7 @@ class TestInvalidOAuth(APITestBase):
         cls.db.session.expire_on_commit = False
         hoops.flask.config['TESTING_PARTNER_API_KEY'] = None
         cls.language = Language.query.first()
-        # print Language.query.first()
+
         cls.partner = dbhelper.add(
             Partner(language=cls.language, name='test', output_format='json', enabled=False),
             db=cls.db)

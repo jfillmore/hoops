@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy.exc import IntegrityError
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from test_models.core import Customer, Language, Partner
 from tests.models_tests import ModelsTestBase
 import time

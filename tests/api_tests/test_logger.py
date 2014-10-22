@@ -21,7 +21,7 @@ class TestLogger(APITestBase):
         #     os.remove(cls.log_file)
         # except OSError:
         #     pass
-        configure_logging(log_configfile, log_path=here, log_level='DEBUG', app_name='hoops')
+        configure_logging(config_filename=log_configfile, log_path=here, log_level='DEBUG', app_name='hoops')
         cls.logger = logging.getLogger('test')
 
         @app.route('/500', methods=['POST'])

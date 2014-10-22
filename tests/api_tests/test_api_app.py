@@ -1,5 +1,5 @@
 
-from tests.api_tests import APITestBase
+from tests.api_tests import APITestBase, config_file, db_config
 import simplejson as json
 
 from hoops import create_api
@@ -18,7 +18,6 @@ class TestAPIApp(APITestBase):
 
     def test_app(self):
         assert self._app
-        assert self.api
 
     def test_get(self):
         rv = self.app.get("/")
@@ -31,11 +30,11 @@ class TestAPIApp(APITestBase):
         assert 'hello' in out['response_data']
 
     def test_create_app_with_no_environment(self):
-        api, app = create_api(flask_conf={'DEBUG': True, 'ENVIRONMENT_NAME': 'local'}, app_name='hoops',)
+        (app, db) = create_api(db_config=db_config, config_file=config_file, flask_conf={'DEBUG': True, 'ENVIRONMENT_NAME': 'local'}, app_name='hoops',)
         assert app.config.get('ENVIRONMENT_NAME') == 'local'
 
     def test_create_app_with_no_app_name(self):
-        api, app = create_api(flask_conf={'DEBUG': True, 'ENVIRONMENT_NAME': 'local'})
+        (app, db) = create_api(db_config=db_config, config_file=config_file, flask_conf={'DEBUG': True, 'ENVIRONMENT_NAME': 'local'}, app_name='hoops',)
         assert app.config.get('ENVIRONMENT_NAME') == 'local'
 
     def test_404(self):

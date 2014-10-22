@@ -1,8 +1,10 @@
 from flask import Flask
-from tests.local import SQLALCHEMY_DATABASE_URI
 import unittest
+from os.path import expanduser
+
 from tests import dbhelper
 from test_models import db
+from hoops import load_config_file
 from hoops.common import BaseModel, SluggableModel
 from sqlalchemy import Column, String, Boolean
 from sqlalchemy.orm.exc import NoResultFound, MultipleResultsFound
@@ -15,8 +17,10 @@ from hoops.utils import TestUtilities
 import time
 
 app = Flask(__name__)
+db_config_file = expanduser('~') + '/.hoops_db.yml'
+db_config = load_config_file(db_config_file, 'test')
 
-app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://%(username)s:%(password)s@localhost/%(database)s?charset=utf8' % db_config
 app.config['TESTING'] = True
 
 

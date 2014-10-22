@@ -1,9 +1,12 @@
 import unittest
 from sqlalchemy import event
 from sqlalchemy import Column, String
-from hoops.common import HashedPasswordMixin, hash_password_before_change_listener
-from tests.models_tests import ModelsTestBase, BaseDB as db
 from coaster.sqlalchemy import BaseMixin
+
+from hoops.common import HashedPasswordMixin, HashUtils
+from hoops import db
+
+from tests.models_tests import ModelsTestBase
 
 
 class BaseModel(BaseMixin, db.Model):
@@ -21,8 +24,8 @@ class HashableModel(BaseModel, HashedPasswordMixin):
     __abstract__ = True
 
 
-event.listen(HashableModel, 'before_insert', hash_password_before_change_listener, propagate=True)
-event.listen(HashableModel, 'before_update', hash_password_before_change_listener, propagate=True)
+event.listen(HashableModel, 'before_insert', HashUtils.hash_password_before_change_listener, propagate=True)
+event.listen(HashableModel, 'before_update', HashUtils.hash_password_before_change_listener, propagate=True)
 
 
 class TheTestHashableModel(HashableModel):

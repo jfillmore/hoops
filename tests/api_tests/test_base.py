@@ -86,7 +86,6 @@ class TestBaseClasses(APITestBase):
             op.setup = test_setup
             op()
             assert hasattr(op, 'okay')
-        print find_subclasses('Invalid class')
 
     def test_combined_params(self):
         """Test combined_params"""

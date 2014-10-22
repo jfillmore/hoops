@@ -1,11 +1,12 @@
 import simplejson as json
-from tests import TestBase
+from hoops import create_api
+
+from tests import TestBase, config_file, db_config
 from test_models.core import Partner, Language, PartnerAPIKey, Service, Package, PackageService, PackageServiceParam, Customer, CustomerPackage, User
 from test_models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
-from test_models import db
-import hoops.status
-from flask import url_for
-from hoops import create_api, register_views
+# from test_models import db
+
+
 api = None
 
 
@@ -13,12 +14,13 @@ class APITestBase(TestBase):
 
     @classmethod
     def get_app(cls):
+
+        app, db = create_api(db_config=db_config,
+                             config_file=config_file,
+                             app_name='hoops',
+                             flask_conf={'DEBUG': True,
+                                         'ENVIRONMENT_NAME': 'test'})
         cls.db = db
-        cls.api, app = create_api(database=db,
-                                  app_name='hoops',
-                                  flask_conf={'DEBUG': True,
-                                              'ENVIRONMENT_NAME': 'test'})
-        register_views()
         return app
 
     @classmethod
@@ -35,8 +37,8 @@ class APITestBase(TestBase):
         ak = p.generate_api_key('testing')
         cls.db.session.add_all([l, p, ak])
         cls.db.session.commit()
-        db.session.refresh(ak)
-        db.session.refresh(ak.partner)
+        cls.db.session.refresh(ak)
+        cls.db.session.refresh(ak.partner)
         app.config['TESTING_PARTNER_API_KEY'] = ak
 
     def populate_default_partner(cls):
@@ -44,7 +46,7 @@ class APITestBase(TestBase):
         en = Language.query.filter_by(lang='en').first()
         if not en:
             en = Language(lang='en', name='English', active=1)
-            db.session.add(en)
+            cls.db.session.add(en)
         test_pkg1 = Package(name='test page site', description='Basic page site')
         p.packages.append(test_pkg1)
         c3 = Customer(partner=p, name='test customer')

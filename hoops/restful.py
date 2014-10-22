@@ -25,7 +25,8 @@ error_map = {
     501: status_library.API_CODE_NOT_IMPLEMENTED,
 }
 
-logger = logging.getLogger('api.error')
+request_logger = logging.getLogger('api.request')
+api_error_logger = logging.getLogger('api.error')
 error_logger = logging.getLogger('error')
 
 
@@ -50,7 +51,7 @@ class API(restful.Api):
         except:
             message = args[0]
 
-        logger.error('%s: %s', response.data, message)
+        api_error_logger.error('%s: %s', response.data, message)
         if response.status_code >= 500:
             error_logger.exception('%s: %s', response.data, message)
 
@@ -107,6 +108,14 @@ class API(restful.Api):
             return ['application/json']
         return super(API, self).mediatypes()
 
+    def register(self, cls):
+        routes = [cls.route] if cls.route else []
+        object_route = getattr(cls, 'object_route', None)
+        if object_route:
+            routes.append(object_route)
+        if routes:
+            self.add_resource(cls, *routes, endpoint=cls.route)
+
 
 class OAuthAPI(API):
     '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
@@ -156,8 +165,16 @@ def prepare_output(data, code, headers=None):
         data = APIResponse(data, status=error_map.get(code, APIStatus(
             http_status=code, status_code=code * 10, message=data
         )))
+
     out = data.to_json()
     code = data.status.http_status
+
+    return_string = unicode(data.response)
+    response_data = unicode(data.response.get('response_data')) if data.response.get('response_data') else return_string
+
+    request_logger.info('Response %d chars: %s...', len(return_string), unicode(response_data[:50]))
+    request_logger.debug('Response body: %s', return_string)
+
     return out, code
 
 
@@ -169,7 +186,6 @@ def output_json(data, code, headers=None):
                                     indent=4,
                                     separators=(',', ': ')), code)
     resp.headers.extend(headers or {})
-
     return resp
 
 

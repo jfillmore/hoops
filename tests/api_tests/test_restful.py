@@ -52,11 +52,9 @@ class TestRestFulApi(APITestBase):
 
     def test_api_exc(self):
         self.validate(self.app.put('/word'), status.API_FORBIDDEN)
-        #assert data['response_data']['word'] == 'letter'
 
     def test_api_exc_manual(self):
         self.validate(self.app.delete('/word'), status.API_FORBIDDEN)
-        #assert data['response_data']['word'] == 'letter'
 
     def test_other_exc(self):
         '''Tests that tracebacks and exceptions are captured in DEBUG mode'''

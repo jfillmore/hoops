@@ -12,25 +12,33 @@ class Struct(object):
         self.__dict__.update(entries)
 
 
-def random_key_generator():
-    """ Method to generate random keys. It can be used to generate token, toke_secret etc.
-    """
-    return base64.b64encode(hashlib.sha256(str(random.getrandbits(256)))
-                            .digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('==')
+class OutputFormat:
+    JSON = 'json'
+    XML = 'xml'
 
 
-def find_subclasses(cls):
-    ''' Find all subclasses of given class
-        cls - Any class whose subclass to be found
-    '''
-    subclasses = None
-    try:
-        subclasses = cls.__subclasses__()
-        for d in list(subclasses):
-            subclasses.extend(find_subclasses(d))
-    except:
-        pass
-    return subclasses
+class ActiveQuery(object):
+    """Returns a query handle filtered to just active objects"""
+    def __get__(self, instance, owner):
+        return owner._apply_active_filter(owner.query)
+
+
+class ActiveOrSuspendedQuery(object):
+    """Returns a query handle filtered to just active or suspended objects"""
+    def __get__(self, instance, owner):
+        if hasattr(owner, 'status'):
+            return owner.query.filter(owner.status.in_(('suspended', 'active',)))
+        else:
+            return owner.query_active
+
+
+class NotSuspendedQuery(object):
+    """Returns a query handle filtered to everything but suspended objects"""
+    def __get__(self, instance, owner):
+        if hasattr(owner, 'status'):
+            return owner.query.filter(owner.status.notin_(('suspended',)))
+        else:
+            return owner.query_active
 
 
 class TestUtilities(object):
@@ -78,3 +86,24 @@ class TestUtilities(object):
         for table in reversed(db.metadata.sorted_tables):
             db.session.execute(table.delete())
         db.session.commit()
+
+
+def random_key_generator():
+    """ Method to generate random keys. It can be used to generate token, toke_secret etc.
+    """
+    return base64.b64encode(hashlib.sha256(str(random.getrandbits(256)))
+                            .digest(), random.choice(['rA', 'aZ', 'gQ', 'hH', 'hG', 'aR', 'DD'])).rstrip('==')
+
+
+def find_subclasses(cls):
+    ''' Find all subclasses of given class
+        cls - Any class whose subclass to be found
+    '''
+    subclasses = None
+    try:
+        subclasses = cls.__subclasses__()
+        for d in list(subclasses):
+            subclasses.extend(find_subclasses(d))
+    except:
+        pass
+    return subclasses

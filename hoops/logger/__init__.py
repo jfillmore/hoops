@@ -4,34 +4,35 @@ import logging.config
 from flask import request
 import time
 import yaml
-import re
 import traceback
 import os
 
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def configure_logging(config_filename=this_dir + '/logging.yaml', log_level='ERROR', log_path='.', app_name='hoops'):
+def configure_logging(config_filename=this_dir + '/logging.yaml', log_level='ERROR', log_path='.', app_name='hoops', logging_config=None):
     """
     Configures the logging according to the setting in the config file and the other parameters
     """
+    if type(logging_config) is not dict:
+        config_filename = config_filename or this_dir + '/logging.yaml'
+        log_level = log_level or 'ERROR'
+        log_path = log_path or '.'
+        app_name = app_name or 'hoops'
 
-    config_filename = config_filename or this_dir + '/logging.yaml'
-    log_level = log_level or 'ERROR'
-    log_path = log_path or '.'
-    app_name = app_name or 'hoops'
+        with open(config_filename) as f:
+            cfg_string = f.read()
 
-    with open(config_filename) as f:
-        cfg_string = f.read()
         # variable substitution
         cfg_string = cfg_string.replace('{log_path}', log_path)
         cfg_string = cfg_string.replace('{app_name}', app_name.replace(' ', '_'))
 
         logging_config = yaml.load(cfg_string)
-        logging.config.dictConfig(logging_config)
-        # set global logging level for all the handlers
-        disabled_loglevel = max(logging.getLevelName(log_level) - 1, 1)
-        logging.disable(disabled_loglevel)
+
+    logging.config.dictConfig(logging_config)
+    # set global logging level for all the handlers
+    disabled_loglevel = max(logging.getLevelName(log_level) - 1, 1)
+    logging.disable(disabled_loglevel)
 
 
 class ContextFilter(Filter):

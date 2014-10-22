@@ -1,6 +1,4 @@
 import copy
-
-
 import hoops.status
 
 VERSION = "1.0.0"
@@ -53,4 +51,4 @@ class PaginatedAPIResponse(APIResponse):
                 "sort_dir": params.get('sort_dir', 'asc'),
             }
 
-        super(PaginatedAPIResponse, self).__init__(data, extra, status)
+        APIResponse.__init__(self, data, extra, status)
