@@ -8,11 +8,11 @@ from flask.ext.sqlalchemy import SQLAlchemy
 
 db = SQLAlchemy()
 
-from .restful import API, OAuthAPI
+from hoops.restful import API, OAuthAPI
 import hoops.json_add_to_json_hack
-from .utils import find_subclasses
-from .base import APIResource
-from .logger import configure_logging
+from hoops.utils import find_subclasses
+from hoops.base import APIResource
+from hoops.logger import configure_logging
 
 flask = None
 api = None
@@ -62,6 +62,6 @@ def create_api(database=None, app_name=None, rest_args=None, flask_conf=None, oa
 
     return api, flask
 
-    
+
 def register_views():
     [sub.register() for sub in find_subclasses(APIResource)]

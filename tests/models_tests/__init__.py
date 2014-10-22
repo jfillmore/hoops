@@ -25,6 +25,7 @@ class ModelsTestBase(TestBase):
     @classmethod
     def get_app(cls):
         cls.api, app = create_api(database=cls.db,
+                                  app_name='hoops',
                                   flask_conf={'DEBUG': True,
                                               'ENVIRONMENT_NAME': 'test'})
         register_views()

@@ -169,6 +169,7 @@ class TestCommonModels(unittest.TestCase):
         myBaseModel = MyBaseModel.get_one(name="Created Only Model")
         testSlugModel = MySluggableModel.get_one(slug='test-model-aa')
 
+        assert myBaseModel.updates_permitted() is True
         assert baseModelPrevCreatedAt == myBaseModel.created_at
         assert slugModelPrevCreatedAt == testSlugModel.created_at
 

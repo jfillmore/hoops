@@ -36,7 +36,7 @@ def find_subclasses(cls):
 class TestUtilities(object):
 
     @classmethod
-    def drop_tables(cls, db):
+    def drop_tables(cls, db):  # pragma: no cover
         """
         Drop All tables from database
         """

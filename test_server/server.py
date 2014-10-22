@@ -14,7 +14,8 @@ flask = None
 
 if __name__ == '__main__':
     api, flask = create_api(
-        flask_conf={'DEBUG': True}
+        flask_conf={'DEBUG': True},
+        app_name='hoops',
     )
 
     views.Example.register()

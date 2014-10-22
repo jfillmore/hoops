@@ -12,11 +12,11 @@ from hoops.restful import Resource
 from hoops.response import APIResponse
 import hoops
 import hoops.status
-from test_models import db
-database = db
-from hoops import create_api, register_views
+from hoops import db, create_api, register_views
 from hoops.base import APIResource, parameter, url_parameter
 from hoops.generic import ListOperation, CreateOperation, UpdateOperation, DeleteOperation, include_related
+
+database = db
 
 
 class OAuthEndpoint(Resource):
@@ -95,6 +95,7 @@ class TestOAuth(APITestBase):
         cls.api, app = create_api(database=db,
                                   flask_conf={'DEBUG': True,
                                               'ENVIRONMENT_NAME': 'test'},
+                                  app_name='hoops',
                                   oauth_args=oauth_args)
 
         register_views()
@@ -319,7 +320,6 @@ class TestOAuth(APITestBase):
         out = self.oauth_call('DELETE', '/oauth_customers', 'delete', fail=False, put_url_param={'customer_id': c1.id})
         assert out['response_data']['status'] == 'deleted'
 
-
     def oauth_call(self, method, target, req_type='query_string', fail=False, put_url_param={}, nokey=False, **kwargs):
         # print self.key
         with self._app.app_context():
@@ -394,6 +394,7 @@ class TestInvalidOAuth(APITestBase):
         cls.api, app = create_api(database=db,
                                   flask_conf={'DEBUG': True,
                                               'ENVIRONMENT_NAME': 'test'},
+                                  app_name='hoops',
                                   oauth_args=oauth_args)
         register_views()
         return app

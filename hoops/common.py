@@ -168,7 +168,11 @@ class BaseModel(BaseMixin, db.Model):
         ]
 
     def updates_permitted(self, **kwargs):
-        return True
+        try:
+            return self.status not in ('deleted', 'disabled')
+        except:
+            return True
+
 
     @classmethod
     def get_one(cls, *args, **kwargs):

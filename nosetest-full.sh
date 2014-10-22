@@ -35,6 +35,9 @@ clear_pyc() {
 clear_pyc
 $NOSETESTS \
     --with-coverage \
+    --with-progressive \
+    --detailed-errors \
+    --logging-level=ERROR \
     --cover-package=hoops \
     --cover-branches \
     --cover-erase \
