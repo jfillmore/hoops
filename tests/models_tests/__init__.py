@@ -1,4 +1,4 @@
-from tests import TestBase, config_file, db_config
+from tests import TestBase, db_config, app_config
 from tests import dbhelper
 from test_models.core import Partner, Customer, User, Language
 from hoops.utils import OutputFormat
@@ -23,7 +23,7 @@ class ModelsTestBase(TestBase):
     @classmethod
     def get_app(cls):
         app, cls.db = create_api(db_config=db_config,
-                                 config_file=config_file,
+                                 app_config=app_config,
                                  app_name='hoops',
                                  flask_conf={'DEBUG': True,
                                              'ENVIRONMENT_NAME': 'test'})

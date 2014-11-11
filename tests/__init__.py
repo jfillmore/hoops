@@ -2,14 +2,17 @@
 from flask import url_for
 from hoops.utils import TestUtilities
 from hoops import load_config_file
-
 from os.path import expanduser
+
+ENVIRONMENT_NAME = 'test'
 
 config_file = expanduser('~') + '/.hoops.yml'
 db_config_file = expanduser('~') + '/.hoops_db.yml'
+log_config_file = expanduser('~') + '/.hoops_logging.yml'
 
-db_config = load_config_file(db_config_file, 'test')
-
+db_config = load_config_file(db_config_file, ENVIRONMENT_NAME)
+log_config = load_config_file(log_config_file, False)
+app_config = load_config_file(config_file, ENVIRONMENT_NAME)
 
 class TestBase(object):
 

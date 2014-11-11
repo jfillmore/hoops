@@ -5,7 +5,7 @@ import restkit.oauth2 as oauth
 import time
 from formencode.validators import String, UnicodeString, Int, StringBool
 
-from tests.api_tests import APITestBase, config_file, db_config
+from tests.api_tests import APITestBase, app_config, db_config
 from test_models.core import Partner, Language, Customer, PartnerAPIKey, User
 from tests import dbhelper
 from hoops.restful import Resource
@@ -90,7 +90,7 @@ class TestOAuth(APITestBase):
                       'token_secret': None}
 
         app, cls.db = create_api(db_config=db_config,
-                                 config_file=config_file,
+                                 app_config=app_config,
                                  flask_conf={'DEBUG': True,
                                              'ENVIRONMENT_NAME': 'test'},
                                  app_name='hoops',
@@ -387,7 +387,7 @@ class TestInvalidOAuth(APITestBase):
                       'token': None,
                       'token_secret': None}
         app, cls.db = create_api(db_config=db_config,
-                                 config_file=config_file,
+                                 app_config=app_config,
                                  flask_conf={'DEBUG': True,
                                              'ENVIRONMENT_NAME': 'test'},
                                  app_name='hoops',

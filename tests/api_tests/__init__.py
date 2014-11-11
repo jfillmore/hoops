@@ -1,10 +1,9 @@
 import simplejson as json
 from hoops import create_api
 
-from tests import TestBase, config_file, db_config
+from tests import TestBase, app_config, db_config, log_config
 from test_models.core import Partner, Language, PartnerAPIKey, Service, Package, PackageService, PackageServiceParam, Customer, CustomerPackage, User
 from test_models.basekit import BaseKitBrand, BaseKitCluster, BaseKitNode, BaseKitPackage, BaseKitPackageTemplate, BaseKitUser, BaseKitSite
-# from test_models import db
 
 
 api = None
@@ -15,8 +14,9 @@ class APITestBase(TestBase):
     @classmethod
     def get_app(cls):
 
-        app, db = create_api(db_config=db_config,
-                             config_file=config_file,
+        app, db = create_api(app_config=app_config,
+                             db_config=db_config,
+                             log_config=log_config,
                              app_name='hoops',
                              flask_conf={'DEBUG': True,
                                          'ENVIRONMENT_NAME': 'test'})
