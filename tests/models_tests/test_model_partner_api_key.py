@@ -1,5 +1,5 @@
 
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from test_models.core import Language, Partner, PartnerAPIKey
 import random
 from tests import dbhelper

@@ -30,25 +30,16 @@ OAUTH_PARAMS = (
 def oauth_authentication(partner_api_key=None):
     params = {key: value for key, value in request.values.iteritems()}
 
-    # print request.base_url, "\n", request.method, "\n", params, "\n", request.headers
-    # print "~~",request.base_url,"~~"
     if(request.method == 'GET'):
         oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
     else:
         oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, headers=request.headers)
-    
-    
 
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
 
-    # print partner_api_key.partner.enabled
     if not partner_api_key or not partner_api_key.partner.enabled:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
-
-    # consumer_key_string = 'oauth_consumer_key="' + partner_api_key.consumer_key + '"'
-    # if not consumer_key_string in str(request.headers):
-    #     raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
 
     consumer = {
         'oauth_consumer_key': partner_api_key.consumer_key,

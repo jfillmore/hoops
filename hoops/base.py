@@ -1,21 +1,29 @@
 import copy
 import re
-
-from flask import g
+import logging
+from flask import g, request
 from flask.ext.restful import abort
 from formencode import Invalid, Schema
 from formencode.validators import Validator
 
-import hoops
 from hoops.restful import Resource
 from hoops.exc import APIValidationException
 from hoops.status import library as status_library
 
+request_logger = logging.getLogger('api.request')
+
 
 class APIOperation(object):
     def __call__(self, *args, **kwargs):
+        # logging parameters
         self.url_params = self.validate_url(**kwargs)
         self.params = self.validate_input()
+
+        remote_addr = request.remote_addr or 'localhost'
+        request_method = request.environ.get('REQUEST_METHOD')
+        path_info = request.environ.get('PATH_INFO')
+        request_logger.debug('Request: %s %s %s %s', remote_addr, request_method, path_info, unicode(self.params))
+
         if hasattr(self, 'setup'):
             self.setup(*args, **kwargs)
         return self.process_request(*args, **kwargs)
@@ -88,7 +96,6 @@ class APIModelOperation(APIOperation):
         '''Obtains the base query for a model-based operation.'''
         all_params = kwargs
         all_params.update(self.combined_params)
-        query = self.resource.model.query
         return self.resource.get_base_query(**all_params)
 
     def load_object(self, **kwargs):
@@ -168,16 +175,6 @@ class APIResource(Resource):
         if self.read_only:
             abort(405)
         return self.remove(**kwargs)
-
-    @classmethod
-    def register(cls):
-
-        routes = [cls.route] if cls.route else []
-        object_route = getattr(cls, 'object_route', None)
-        if object_route:
-            routes.append(object_route)
-        if routes:
-            hoops.api.add_resource(cls, *routes, endpoint=cls.route)
 
     @classmethod
     def get_base_query(self, **kwargs):

@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 *.py[cod]
+*.log
 dist/
 hoops.egg-info/
 .idea/

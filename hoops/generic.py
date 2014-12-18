@@ -22,7 +22,6 @@ class ListOperation(APIModelOperation):
     def process_request(self, *args, **kwargs):
         super(ListOperation, self).process_request(*args, **kwargs)
         try:
-            # print self.get_base_query()
             pager = self.paginate_query(self.get_base_query())
         except NotFound:
             # 404 is raised when Flask-Alchemy's pagination finds no results with a page > 1

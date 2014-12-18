@@ -1,5 +1,5 @@
 from tests.models_tests import ModelsTestBase
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from test_models.core import PackageService, Package, Language, Partner, Service, PackageServiceParam
 
 

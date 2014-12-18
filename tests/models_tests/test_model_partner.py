@@ -2,7 +2,7 @@
 import unittest
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm.exc import NoResultFound
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from tests import dbhelper
 from test_models.core import Partner, Language
 from tests.models_tests import ModelsTestBase

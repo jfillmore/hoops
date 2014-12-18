@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 from sqlalchemy.exc import IntegrityError
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from test_models.core import Customer, Language, Partner
 from tests.models_tests import ModelsTestBase
 import time
@@ -65,7 +65,7 @@ class TestCustomerModels(ModelsTestBase):
 
     def test_06_get_the_inherited_class(self):
         ''' Check the inherited model class. '''
-        from hoops.utils import BaseModel
+        from hoops.common import BaseModel
         _customer = Customer()
         assert isinstance(
             _customer, BaseModel), "Test to check inheritance from BaseModel failed"

@@ -3,7 +3,7 @@ from tests.api_tests import APITestBase
 from tests.models_tests import ModelsTestBase
 from test_models.basekit import BaseKitBrand, BaseKitSite
 from test_models.core import User
-from hoops.utils import BaseModel
+from hoops.common import BaseModel
 import time
 
 
@@ -91,4 +91,4 @@ class TestBaseKitUserModel(ModelsTestBase):
         for col in ['status', 'front_end_ip_addresses', 'user_id', 'service', 'created_at', 'updated_at', 'template_id', 'package_id', 'domains', 'id', 'front_end_cnames']:
             assert col in out, '%s not found in result of BaseKitSite.to_json()' % col
         assert out['service'] == 'builder'
-        
+

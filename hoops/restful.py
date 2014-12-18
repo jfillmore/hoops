@@ -14,6 +14,8 @@ from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
 from hoops.oauth_provider import oauth_authentication
 from hoops.utils import Struct
+import logging
+
 error_map = {
     200: status_library.API_OK,
     403: status_library.API_FORBIDDEN,
@@ -22,6 +24,10 @@ error_map = {
     500: status_library.API_UNHANDLED_EXCEPTION,
     501: status_library.API_CODE_NOT_IMPLEMENTED,
 }
+
+request_logger = logging.getLogger('api.request')
+api_error_logger = logging.getLogger('api.error')
+error_logger = logging.getLogger('error')
 
 
 class Resource(restful.Resource):
@@ -37,7 +43,22 @@ class API(restful.Api):
             'application/json': output_json,
         }
 
+    def make_response(self, *args, **kwargs):
+        response = restful.Api.make_response(self, *args, **kwargs)
+
+        try:
+            message = getattr(args[0], 'response', None).get('status_message', None)
+        except:
+            message = args[0]
+
+        api_error_logger.error('%s: %s', response.data, message)
+        if response.status_code >= 500:
+            error_logger.exception('%s: %s', response.data, message)
+
+        return response
+
     def handle_error(self, e):
+
         if isinstance(e, HTTPException):
             return self.make_response(
                 APIResponse(None, status=error_map.get(e.code, APIStatus(http_status=e.code, status_code=e.code * 10, message=e.description))),
@@ -51,7 +72,6 @@ class API(restful.Api):
                 APIResponse(None, status=e.status),
                 e.status.http_status)
 
-        # TODO add logging here
         status = status_library.API_UNHANDLED_EXCEPTION
         if current_app.config.get('DEBUG'):
             tb_info = sys.exc_info()
@@ -87,6 +107,14 @@ class API(restful.Api):
                 and 'Mozilla' in request.user_agent.string):
             return ['application/json']
         return super(API, self).mediatypes()
+
+    def register(self, cls):
+        routes = [cls.route] if cls.route else []
+        object_route = getattr(cls, 'object_route', None)
+        if object_route:
+            routes.append(object_route)
+        if routes:
+            self.add_resource(cls, *routes, endpoint=cls.route)
 
 
 class OAuthAPI(API):
@@ -137,8 +165,16 @@ def prepare_output(data, code, headers=None):
         data = APIResponse(data, status=error_map.get(code, APIStatus(
             http_status=code, status_code=code * 10, message=data
         )))
+
     out = data.to_json()
     code = data.status.http_status
+
+    return_string = unicode(data.response)
+    response_data = unicode(data.response.get('response_data')) if data.response.get('response_data') else return_string
+
+    request_logger.info('Response %d chars: %s...', len(return_string), unicode(response_data[:50]))
+    request_logger.debug('Response body: %s', return_string)
+
     return out, code
 
 
@@ -150,7 +186,6 @@ def output_json(data, code, headers=None):
                                     indent=4,
                                     separators=(',', ': ')), code)
     resp.headers.extend(headers or {})
-
     return resp
 
 

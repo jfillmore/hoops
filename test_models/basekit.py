@@ -2,7 +2,7 @@
 from sqlalchemy import Column, String, Integer, Boolean, Text
 from sqlalchemy import ForeignKey, UniqueConstraint
 
-from hoops.utils import SluggableModel, BaseModel
+from hoops.common import SluggableModel, BaseModel
 from hoops import db
 
 

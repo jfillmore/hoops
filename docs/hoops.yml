@@ -1,0 +1,93 @@
+app:
+  local:
+    database:
+      database: jetlaunch
+      username: copper
+      password: copper
+    debug: False
+  test:
+    database:
+      database: jetlaunch
+      username: copper
+      password: copper
+    debug: True
+    disable_logging: False
+logging:
+  version: 1
+  disable_existing_loggers: True
+  formatters:
+    standard:
+      format: '[%(asctime)s] %(request_uid)s %(levelname)s %(name)s: %(message)s'
+      (): ext://hoops.logger.UTCFormatter
+    logstash:
+      (): ext://logstash_formatter.LogstashFormatter
+
+  filters:
+    request_context:
+      (): hoops.logger.ContextFilter
+
+  handlers:
+    all:
+      level: DEBUG
+      class: logging.handlers.WatchedFileHandler
+      filename: {log_path}/{app_name}_all.log
+      mode: a
+      formatter: standard
+      filters:
+        - request_context
+
+    error:
+      level: ERROR
+      class: logging.handlers.WatchedFileHandler
+      filename: {log_path}/{app_name}_error.log
+      mode: a
+      formatter: standard
+      filters:
+        - request_context
+
+    machine:
+      level: DEBUG
+      class: logging.handlers.WatchedFileHandler
+      filename: {log_path}/{app_name}_machine.log
+      mode: a
+      formatter: logstash
+      filters:
+        - request_context
+
+
+  loggers:
+    # This is the logger for the api. Use 'api.data' or any other namespace under api.*
+    # Usage: logger = logging.getLogger('api.request')
+    api:
+      level: DEBUG
+      handlers:
+        - all
+        - machine
+      propagate: False
+      filters:
+        - request_context
+
+    # This log is for error details, such as stacktraces, that would otherwise clutter the regular logs
+    # Usage: logger = logging.getLogger('error')
+    error:
+      level: ERROR
+      handlers:
+        - error
+        - machine
+      propagate: False
+      filters:
+        - request_context
+
+    # This is the logger for third party services, such as basekit and enom, for example 'service.basekit'
+    # Usage: logger = logging.getLogger('service.thirdparty')
+    service:
+      level: DEBUG
+      handlers:
+        - all
+        - machine
+      propagate: False
+      filters:
+        - request_context
+
+    root:
+      level: DEBUG

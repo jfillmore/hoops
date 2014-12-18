@@ -1,13 +1,11 @@
-from tests import TestBase
-from test_models import db as BaseDB
+from tests import TestBase, db_config, app_config
 from tests import dbhelper
 from test_models.core import Partner, Customer, User, Language
-from test_config import OutputFormat
-from hoops import create_api, register_views
+from hoops.utils import OutputFormat
+from hoops import create_api
 
 
 class ModelsTestBase(TestBase):
-    db = BaseDB
 
     def populate_helper(self, lang=True, partner='test', customers=['test'], users=['test']):
         if lang:
@@ -24,8 +22,9 @@ class ModelsTestBase(TestBase):
 
     @classmethod
     def get_app(cls):
-        cls.api, app = create_api(database=cls.db,
-                                  flask_conf={'DEBUG': True,
-                                              'ENVIRONMENT_NAME': 'test'})
-        register_views()
+        app, cls.db = create_api(db_config=db_config,
+                                 app_config=app_config,
+                                 app_name='hoops',
+                                 flask_conf={'DEBUG': True,
+                                             'ENVIRONMENT_NAME': 'test'})
         return app

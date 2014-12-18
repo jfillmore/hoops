@@ -1,7 +1,7 @@
 from sqlalchemy.exc import IntegrityError
 from tests.models_tests import ModelsTestBase
 from test_models.core import Partner, Language, Package, Customer, CustomerPackage, Service, PackageService
-from test_config import OutputFormat
+from hoops.utils import OutputFormat
 from tests import dbhelper
 from test_models import db
 
@@ -54,8 +54,7 @@ class TestCustomerPackageModel(ModelsTestBase):
             svc = dbhelper.add(Service(name='Test Service', provisioning_enabled=True, slug=None), db)
             dbhelper.add(PackageService(package=pkg, service=svc), db)
             cp = CustomerPackage.query.first()
-            #print cp.to_json()
-            #print cp.to_json().keys()
+
             out = cp.to_json()
             assert sorted(out.keys()) == ['created_at', 'description', 'id', 'name', 'services', 'status', 'updated_at'], \
                 sorted(out.keys())

@@ -3,7 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Text, Uniqu
 import re
 from flask_login import UserMixin
 from hoops.utils import random_key_generator
-from hoops.utils import BaseModel, SluggableModel, HashableModel
+from hoops.common import BaseModel, SluggableModel, HashableModel
 from hoops import db
 from test_models.basekit import BaseKitSite
 
@@ -86,10 +86,7 @@ class Customer(BaseModel):
         return sum(item.count() for item in self.get_active_services())
 
     def updates_permitted(self, **kwargs):
-        if self.status in ('deleted', 'disabled'):
-            return False
-        # TODO: Consider whether we wish to permit changing details when suspended
-        return True
+        return BaseModel.updates_permitted(self, **kwargs)
 
     @classmethod
     def is_valid_status_transition(self, from_status, to_status):
@@ -141,11 +138,7 @@ class User(HashableModel):
         return query.filter(cls.status == 'active')
 
     def updates_permitted(self, **kwargs):
-        if self.status in ('deleted', 'disabled'):
-            return False
-        if not self.customer.updates_permitted():
-            return False
-        return True
+        return HashableModel.updates_permitted(self, **kwargs) and self.customer.updates_permitted()
 
 
 class Language(BaseModel):
@@ -267,9 +260,7 @@ class CustomerPackage(BaseModel):
         return ret
 
     def updates_permitted(self, **kwargs):
-        if not self.customer.updates_permitted():
-            return False
-        return True
+        return self.customer.updates_permitted()
 
 
 class PartnerUser(HashableModel, UserMixin):

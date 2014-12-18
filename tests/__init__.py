@@ -1,15 +1,25 @@
 
 from flask import url_for
-from tests.local import SQLALCHEMY_DATABASE_URI
 from hoops.utils import TestUtilities
+from hoops import load_config_file
+from os.path import expanduser
 
+ENVIRONMENT_NAME = 'test'
+
+config_file = expanduser('~') + '/.hoops.yml'
+db_config_file = expanduser('~') + '/.hoops_db.yml'
+log_config_file = expanduser('~') + '/.hoops_logging.yml'
+
+db_config = load_config_file(db_config_file, ENVIRONMENT_NAME)
+log_config = load_config_file(log_config_file, False)
+app_config = load_config_file(config_file, ENVIRONMENT_NAME)
 
 class TestBase(object):
 
     @classmethod
     def setup_class(cls):
         cls._app = cls.get_app()
-        cls._app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+        # cls._app.config['SQLALCHEMY_DATABASE_URI'] = 'mysql://%(username)s:%(password)s@localhost/%(database)s?charset=utf8' % db_config
         cls._app.config['TESTING'] = True
         if cls.db and not cls.db.app:
             cls.db.init_app(cls._app)
