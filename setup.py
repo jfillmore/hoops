@@ -12,8 +12,6 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        '--allow-unverified elementtree',
-        '--allow-external elementtree',
         'itsdangerous==0.23',
         'Jinja2==2.7.2',
         'FormEncode==1.2.6',
