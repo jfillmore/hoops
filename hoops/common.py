@@ -5,7 +5,7 @@ from coaster.sqlalchemy import BaseMixin
 from sqlalchemy import event
 from passlib.hash import sha512_crypt
 
-from hoops import db
+from hoops.core import db
 from hoops.utils import (
     ActiveQuery,
     ActiveOrSuspendedQuery,
@@ -127,7 +127,7 @@ class BaseModel(BaseMixin, db.Model):
             props.extend(self.__props__)
         # props = props if unsafe_props is None else list(set(props) - set(unsafe_props))
         for k in props:
-            if not re.match('_\w+', k) and k is not 'partner_id':
+            if not re.match('_\w+', k):
                 v = getattr(self, k)
                 if type(v) == datetime.datetime:
                     v = unicode(v)
@@ -151,12 +151,6 @@ class BaseModel(BaseMixin, db.Model):
             for item in getattr(self, field).all()
         ]
 
-    def updates_permitted(self, **kwargs):
-        try:
-            return self.status not in ('deleted', 'disabled')
-        except:
-            return True
-
     @classmethod
     def get_one(cls, *args, **kwargs):
         """Helper to retrieve one object"""
@@ -166,37 +160,6 @@ class BaseModel(BaseMixin, db.Model):
     def get_one_or_404(cls, *args, **kwargs):
         """Helper to retrieve one object"""
         return cls.query.filter_by(**kwargs).one()
-
-    # @classmethod
-    # def first_or_404(cls, *args, **kwargs):
-    #     """Helper to escape 404 page"""
-    #     try:
-    #         return cls.query.filter_by(**kwargs).first_or_404()
-    #     except NoResultFound:
-    #         raise DatabaseRecordNotFound
-
-    query_active = ActiveQuery()
-    query_active_or_suspended = ActiveOrSuspendedQuery()
-    query_all_except_suspended = NotSuspendedQuery()
-
-    @classmethod
-    def _apply_active_filter(cls, query):
-        """
-        Generic method that applies filters for query_active.
-        If the class has an active field, it uses that.
-        If the class has an enabled field, it uses that instead.
-        If the class has an disabled field, it uses that instead.
-        TODO: Support a status field
-        """
-        if hasattr(cls, 'enabled'):
-            return query.filter_by(enabled=True)
-        elif hasattr(cls, 'active'):
-            return query.filter_by(active=True)
-        elif hasattr(cls, 'disabled'):
-            return query.filter_by(disabled=False)
-        elif hasattr(cls, 'status'):
-            return query.filter_by(status='active')
-        return query
 
 
 class SluggableModel(BaseModel, Slugify):

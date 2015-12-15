@@ -1,4 +1,5 @@
 import copy
+import json
 import re
 import logging
 from flask import g, request
@@ -14,6 +15,16 @@ request_logger = logging.getLogger('api.request')
 
 
 class APIOperation(object):
+
+    '''
+    Used to map API parameter names to database fields. e.g.
+    field_map = {
+       (param_name, field_name) = lambda val: val,
+       ...
+    }
+    '''
+    field_map = {}
+
     def __call__(self, *args, **kwargs):
         # logging parameters
         self.url_params = self.validate_url(**kwargs)
@@ -22,8 +33,10 @@ class APIOperation(object):
         remote_addr = request.remote_addr or 'localhost'
         request_method = request.environ.get('REQUEST_METHOD')
         path_info = request.environ.get('PATH_INFO')
-        request_logger.debug('Request: %s %s %s %s', remote_addr, request_method, path_info, unicode(self.params))
-
+        request_logger.debug(
+            'Request: %s %s %s %s',
+            remote_addr, request_method, path_info, unicode(self.params)
+        )
         if hasattr(self, 'setup'):
             self.setup(*args, **kwargs)
         return self.process_request(*args, **kwargs)
@@ -36,6 +49,18 @@ class APIOperation(object):
         params = copy.deepcopy(getattr(self, 'params', {}))
         url_params = getattr(self, 'url_params', {})
         params.update(url_params)
+        return params
+
+    def _map_fields(self, params):
+        for (param_name, field_name) in self.field_map:
+            # ignore params in our map not supplied in the API call
+            if param_name not in params:
+                continue
+            # we'll also change the value accordingly
+            func = self.field_name[(param_name, field_name)]
+            # add the new value back in, removing the old
+            params[field_name] = func(params[param_name])
+            del params[param_name]
         return params
 
     def _combine_schema(self, attr_name='schema'):
@@ -72,7 +97,7 @@ class APIOperation(object):
     def validate_input(self):
         schema = self._combine_schema('schema')
         try:
-            return schema.to_python(self.resource.get_parameters())
+            params = schema.to_python(self.resource.get_parameters())
         except Invalid as e:
             if e.error_dict:
                 failures = {}
@@ -81,6 +106,7 @@ class APIOperation(object):
             else:
                 failures = {"unknown": e.msg}  # pragma: no cover
             raise APIValidationException(status_library.API_INPUT_VALIDATION_FAILED, failures)
+        return self._map_fields(params)
 
     def process_request(self, *args, **kwargs):
         pass
@@ -92,19 +118,22 @@ class APIModelOperation(APIOperation):
     def model(self):
         return self.resource.model
 
-    def get_base_query(self, limit_to_partner=True, **kwargs):
+    def get_base_query(self, **kwargs):
         '''Obtains the base query for a model-based operation.'''
         all_params = kwargs
         all_params.update(self.combined_params)
         return self.resource.get_base_query(**all_params)
 
-    def load_object(self, **kwargs):
+    def fetch(self, **kwargs):
         item_id = self.combined_params.get(self.resource.object_id_param, None)
         id_column = getattr(self, 'id_column', 'id')
         column = getattr(self.model, id_column)
         item = self.get_base_query(**kwargs).filter(column == item_id).first()
         if item is None:
-            raise status_library.exception('API_DATABASE_RESOURCE_NOT_FOUND', resource=self.resource.model.__tablename__)
+            raise status_library.exception(
+                'API_DATABASE_RESOURCE_NOT_FOUND',
+                resource=self.resource.model.__tablename__
+            )
         return item
 
 
@@ -135,8 +164,15 @@ class APIResource(Resource):
         from flask import request
         if request.method == 'GET':
             return purge_oauth_keys(request.args)
-        else:
+        elif request.json:
+            return purge_oauth_keys(request.json)
+        elif request.form:
             return purge_oauth_keys(request.form)
+        else:
+            # TODO: is this case even needed?
+            return purge_oauth_keys(
+                json.JSONDecoder().decode(request.stream.read())
+            )
 
     @classmethod
     def method(self, method, endpoint=None):
@@ -178,21 +214,8 @@ class APIResource(Resource):
 
     @classmethod
     def get_base_query(self, **kwargs):
-        include_inactive = kwargs.get('include_inactive', False)
-        include_suspended = kwargs.get('include_suspended', False)
-
         model = self.model
-        if not (include_suspended or include_inactive):
-            query = model.query_active
-        elif include_suspended and not include_inactive:
-            query = model.query_active_or_suspended
-        elif include_inactive and not include_suspended:
-            query = model.query_all_except_suspended
-        else:
-            query = model.query
-
-        if kwargs.get('limit_to_partner', False):
-            return query.filter_by(partner_id=g.partner.id)
+        query = model.query
         return query
 
 
@@ -214,7 +237,6 @@ class base_parameter(object):
             schema = copy.deepcopy(getattr(klass, self.schema_property))
         schema.add_field(self.field, self.validator)
         setattr(klass, self.schema_property, schema)
-
         return klass
 
 

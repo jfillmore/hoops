@@ -6,13 +6,14 @@ setup(
     name='hoops',
     version=VERSION,
     description='RESTFul API engine',
-    long_description="""Module for creating RESTful APIs using a declarative syntax""",
+    long_description="""Module for creating and managing RESTful APIs using a declarative syntax.""",
     namespace_packages=['hoops'],
     packages=find_packages(exclude=['tests', '*.tests']),
     include_package_data=True,
     zip_safe=False,
     install_requires=[
         'itsdangerous==0.23',
+        'Babel==1.3',
         'Jinja2==2.7.2',
         'FormEncode==1.2.6',
         'Flask==0.10.1',
@@ -24,6 +25,7 @@ setup(
         'elementtree==1.2.6-20050316',
         'configobj==5.0.5',
         'simplejson==3.6.2',
+        'passlib==1.6.2',
         'PyYAML==3.11',
         'python-logstash==0.4.2',
         'logstash-formatter==0.5.8',
@@ -36,5 +38,8 @@ setup(
         'console_scripts': [
             'server = run_api:main',
         ],
-    }
+    },
+    scripts=[
+        'scripts/api.py'
+    ]
 )

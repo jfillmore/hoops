@@ -1,14 +1,14 @@
-from flask import g
+import copy
+import collections
+
+from flask import current_app
 from formencode.validators import Int, OneOf, String
 from sqlalchemy.exc import IntegrityError
 from werkzeug.exceptions import NotFound
-import copy
-import collections
 
 from hoops.base import parameter, APIModelOperation
 from hoops.response import APIResponse, PaginatedAPIResponse
 from hoops.status import library as status_library
-from hoops import db
 
 
 @parameter('limit', Int(min=1, max=100), "Page size", required=False, default=100)
@@ -47,7 +47,7 @@ class RetrieveOperation(APIModelOperation):
 
     def process_request(self, *args, **kwargs):
         super(RetrieveOperation, self).process_request(*args, **kwargs)
-        return APIResponse(self.load_object())
+        return APIResponse(self.fetch())
 
 
 class CreateOperation(APIModelOperation):
@@ -56,9 +56,7 @@ class CreateOperation(APIModelOperation):
         super(CreateOperation, self).process_request(*args, **kwargs)
 
         obj = self.model(**self.params)
-        if getattr(self.model, 'partner', None):
-            obj.partner = g.partner
-
+        db = current_app.db
         db.session.add(obj)
         try:
             db.session.commit()
@@ -82,7 +80,7 @@ class NotSpecified(object):
 class UpdateOperation(APIModelOperation):
 
     def setup(self, *args, **kwargs):
-        self.object = self.load_object()
+        self.object = self.fetch()
         if not self.object.updates_permitted() and not getattr(self, 'force_update', False):
             raise status_library.API_FORBIDDEN_UPDATE
 
@@ -91,6 +89,7 @@ class UpdateOperation(APIModelOperation):
             value = self.params.get(param, NotSpecified())
             if not isinstance(value, NotSpecified):
                 setattr(self.object, param, value)
+        db = current_app.db
         db.session.add(self.object)
         try:
             db.session.commit()
@@ -105,28 +104,23 @@ class UpdateOperation(APIModelOperation):
 class DeleteOperation(APIModelOperation):
 
     def setup(self, *args, **kwargs):
-        self.object = self.load_object()
+        self.object = self.fetch()
         if not self.object.updates_permitted() and not getattr(self, 'force_delete', False):
             raise status_library.API_FORBIDDEN_DELETE
 
     def process_request(self, *args, **kwargs):
         try:
-            if hasattr(self.object, 'status'):
-                setattr(self.object, 'status', 'deleted')    # TODO: Fix code fior fields active/enabled/disabled
-            else:
-                raise status_library.exception('API_DATABASE_DELETE_FAILED',
-                                               resource=self.model.__tablename__)
-
-            db.session.add(self.object)
+            db = current_app.db
+            db.session.delete(self.object)
             db.session.commit()
         except IntegrityError:
             db.session.rollback()
-            # TODO verify that was the case
-            raise status_library.exception('API_DATABASE_UPDATE_FAILED',
-                                           resource=self.model.__tablename__)
+            raise status_library.exception(
+                'API_DATABASE_DELETE_FAILED',
+                resource=self.model.__tablename__
+            )
         except:
             raise
-
         return APIResponse(self.object)
 
 

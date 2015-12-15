@@ -63,16 +63,5 @@ loggers:
     filters:
       - request_context
 
-  # This is the logger for third party services, such as basekit and enom, for example 'service.basekit'
-  # Usage: logger = logging.getLogger('service.thirdparty')
-  service:
-    level: DEBUG
-    handlers:
-      - all
-      - machine
-    propagate: False
-    filters:
-      - request_context
-
   root:
     level: DEBUG

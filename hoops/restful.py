@@ -12,7 +12,6 @@ from hoops.status import library as status_library
 from hoops.response import APIResponse
 from hoops.exc import APIException, APIValidationException
 from hoops.status import APIStatus
-from hoops.oauth_provider import oauth_authentication
 from hoops.utils import Struct
 import logging
 
@@ -25,13 +24,15 @@ error_map = {
     501: status_library.API_CODE_NOT_IMPLEMENTED,
 }
 
+api_logger = logging.getLogger('api.info')
 request_logger = logging.getLogger('api.request')
 api_error_logger = logging.getLogger('api.error')
 error_logger = logging.getLogger('error')
 
 
 class Resource(restful.Resource):
-    method_decorators = []   # applies to all inherited resources; OauthAPI will append 'require_oauth' on init
+    # applies to all inherited resources; OauthAPI will append 'require_oauth' on init
+    method_decorators = []
 
 
 class API(restful.Api):
@@ -45,20 +46,16 @@ class API(restful.Api):
 
     def make_response(self, *args, **kwargs):
         response = restful.Api.make_response(self, *args, **kwargs)
-
         try:
             message = getattr(args[0], 'response', None).get('status_message', None)
         except:
             message = args[0]
-
-        api_error_logger.error('%s: %s', response.data, message)
+        request_logger.info('%s: %s', response.data, message)
         if response.status_code >= 500:
             error_logger.exception('%s: %s', response.data, message)
-
         return response
 
     def handle_error(self, e):
-
         if isinstance(e, HTTPException):
             return self.make_response(
                 APIResponse(None, status=error_map.get(e.code, APIStatus(http_status=e.code, status_code=e.code * 10, message=e.description))),
@@ -71,7 +68,6 @@ class API(restful.Api):
             return self.make_response(
                 APIResponse(None, status=e.status),
                 e.status.http_status)
-
         status = status_library.API_UNHANDLED_EXCEPTION
         if current_app.config.get('DEBUG'):
             tb_info = sys.exc_info()
@@ -80,12 +76,10 @@ class API(restful.Api):
                     'exception': traceback.format_exception_only(tb_info[0], tb_info[1])[0],
                     'traceback': traceback.extract_tb(tb_info[2])
                 }), status.http_status)
-
+        # We don't use the default error handler
+        # e.g.: return super(API, self).handle_error(e)
         return self.make_response(
             APIResponse(None, status=status), status.http_status)
-
-        # We don't use the default error handler
-        #return super(API, self).handle_error(e)
 
     def _should_use_fr_error_handler(self):
         """ Determine if error should be handled with FR or default Flask
@@ -114,6 +108,7 @@ class API(restful.Api):
         if object_route:
             routes.append(object_route)
         if routes:
+            [api_logger.debug('Adding route %s' % route) for route in routes]
             self.add_resource(cls, *routes, endpoint=cls.route)
 
 
@@ -127,37 +122,20 @@ class OAuthAPI(API):
         Resource.method_decorators = [require_oauth]
         Resource.oauth_args = Struct(**oauth_args)
 
-    def set_partner(self, partner):
-        apidict = deepcopy(partner.__dict__)
-        apidict.update({"partner": None})
-        api_key = Struct(**apidict)
-        api_key.partner = Struct(**partner.partner.__dict__)
-        self.partner = api_key
-        Resource.partner = api_key
-
 
 def require_oauth(func):
     '''Auth wrapper from http://flask-restful.readthedocs.org/en/latest/extending.html?highlight=authentication'''
     @wraps(func)
     def wrapper(*args, **kwargs):
-        g.partner = None
-        g.api_key = None
-        api_key = oauth_bypass()
-        if not api_key:
-            api_key = oauth_authentication(Resource.partner)
-
-        if api_key:
-            g.partner = api_key.partner
-            g.api_key = api_key
-            return func(*args, **kwargs)
-
-        # This is highly unlikely to occur, as oauth raises exceptions on problems
-        restful.abort(401)  # pragma: no cover
+        from hoops.oauth_provider import oauth_authentication
+        # TODO: read server_oauth_creds from args/func
+        server_oauth_creds = {}
+        oauth_creds = oauth_authentication(server_oauth_creds)
+        if not oauth_creds:
+            # This is highly unlikely to occur, as oauth raises exceptions on problems
+            restful.abort(401)  # pragma: no cover
+        return func(*args, **kwargs)
     return wrapper
-
-
-def oauth_bypass():
-    return current_app.config.get('TESTING_PARTNER_API_KEY', None)
 
 
 def prepare_output(data, code, headers=None):

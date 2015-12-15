@@ -1,17 +1,3 @@
-app:
-  local:
-    database:
-      database: jetlaunch
-      username: copper
-      password: copper
-    debug: False
-  test:
-    database:
-      database: jetlaunch
-      username: copper
-      password: copper
-    debug: True
-    disable_logging: False
 logging:
   version: 1
   disable_existing_loggers: True

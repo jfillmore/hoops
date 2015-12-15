@@ -1,0 +1,16 @@
+hoops
+
+scripts:
+
+- dev mode API
+ - needs models
+ - needs db config
+ - needs api views
+- recreate DB
+- upgrade/downgrade/revision DB
+ - where is revisions directory?
+ - needs db models
+
+- scripts easier as modules for import, have templates in docs?
+
+prod server for wusgi 

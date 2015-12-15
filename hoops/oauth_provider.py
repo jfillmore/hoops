@@ -27,33 +27,31 @@ OAUTH_PARAMS = (
 )
 
 
-def oauth_authentication(partner_api_key=None):
+def oauth_authentication(oauth_creds=None):
     params = {key: value for key, value in request.values.iteritems()}
-
-    if(request.method == 'GET'):
+    if request.method == 'GET':
         oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, params=params, headers=request.headers)
     else:
         oauth_request = OAuthRequest(url=request.base_url, http_method=request.method, headers=request.headers)
-
     if not oauth_request.params.get('oauth_consumer_key'):
         raise status.API_AUTHENTICATION_REQUIRED
-
-    if not partner_api_key or not partner_api_key.partner.enabled:
+    if not oauth_creds:
         raise status.API_UNKNOWN_OAUTH_CONSUMER_KEY
-
+    if hasattr(oauth_creds, '__call__'):
+        # we may have been given a function to call to get the creds each time
+        oauth_creds = oauth_creds(request, oauth_request)
     consumer = {
-        'oauth_consumer_key': partner_api_key.consumer_key,
-        'oauth_consumer_secret': partner_api_key.consumer_secret
+        'oauth_consumer_key': oauth_creds.consumer_key,
+        'oauth_consumer_secret': oauth_creds.consumer_secret
     }
     token = {
-        'oauth_token': partner_api_key.token,
-        'oauth_token_secret': partner_api_key.token_secret
+        'oauth_token': oauth_creds.token,
+        'oauth_token_secret': oauth_creds.token_secret
     }
 
     try:
         oauth_request.validate_signature(OAuthSignatureMethod_HMAC_SHA1, consumer, token)
-        return partner_api_key
-
+        return oauth_creds
     except OAuthMissingParameterError as e:
         raise status.exception('API_MISSING_PARAMETER', parameter=e.parameter_name)
     except OAuthError as e:

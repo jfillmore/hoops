@@ -1,16 +1,17 @@
 import logging
 from logging import Filter, Formatter
 import logging.config
-from flask import request
 import time
 import yaml
 import traceback
 import os
 
+from flask import request
+
 this_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def configure_logging(config_filename=this_dir + '/logging.yaml', log_level='ERROR', log_path='.', app_name='hoops', logging_config=None):
+def configure_logging(app_name, config_filename=this_dir + '/logging.yaml', log_level='ERROR', log_path='.', logging_config=None):
     """
     Configures the logging according to the setting in the config file and the other parameters
     """
