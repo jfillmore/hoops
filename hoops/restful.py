@@ -113,9 +113,13 @@ class API(restful.Api):
 
 
 class OAuthAPI(API):
-    '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to required OAuth'''
+    '''Only a single API at a time can be supported. Using OAuthAPI causes all resources to require OAuth.'''
 
     def __init__(self, *args, **kwargs):
+        # TODO:
+        # - make oauth app specific (e.g. extra params, diff Resource for Oauth inheritence, etc?)
+        # - allow adhok usage of oauth on some Resource objects
+        # - define alternate oauth arg handling methods besides static creds
         oauth_args = kwargs['oauth_args']
         del(kwargs['oauth_args'])
         super(API, self).__init__(*args, **kwargs)

@@ -8,6 +8,7 @@ PyExecJS==1.0.4
 Pygments==1.6
 UgliPyJS==0.2.5
 argparse==1.2.1
+configure==0.5
 coaster==0.4.2
 cov-core==1.14.0
 coverage==3.7.1

@@ -13,6 +13,7 @@ setup(
     zip_safe=False,
     install_requires=[
         'itsdangerous==0.23',
+        'argparse==1.2.1',
         'Babel==1.3',
         'Jinja2==2.7.2',
         'FormEncode==1.2.6',
@@ -24,6 +25,7 @@ setup(
         'Werkzeug==0.9.4',
         'elementtree==1.2.6-20050316',
         'configobj==5.0.5',
+        'configure==0.5',
         'simplejson==3.6.2',
         'passlib==1.6.2',
         'PyYAML==3.11',

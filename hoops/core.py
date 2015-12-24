@@ -1,20 +1,19 @@
 # from os import environ
-import warnings
 from flask import Flask
 from flask.ext.babel import Babel
 from flask.ext.sqlalchemy import SQLAlchemy
 from os.path import exists
+import warnings
 import yaml
 
-db = None
-
-import hoops.json_add_to_json_hack
-from hoops.utils import find_subclasses
 from hoops.base import APIResource
 from hoops.logger import configure_logging
+from hoops.utils import find_subclasses
+import hoops.json_add_to_json_hack
 
 SQLALCHEMY_DATABASE_URI = None
 api = None
+db = None
 
 
 def create_api(app_name, rest_args=None, database=None, db_config=None, log_config=None, flask_config=None, oauth_args=None):

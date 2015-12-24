@@ -91,8 +91,8 @@ class HashUtils(object):
         return sha512_crypt.verify(string_value, hash_value)
 
 
-class BaseModel(BaseMixin, db.Model):
-    """ Abstract class based on db.Model which should be used to define other
+class BaseModel(BaseMixin):
+    """ Abstract class based which should be used to define other
     models. This will contain the common implementation details for those
     classes.
     """
