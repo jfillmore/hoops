@@ -13,7 +13,7 @@ import hoops.json_add_to_json_hack
 
 SQLALCHEMY_DATABASE_URI = None
 api = None
-db = None
+flask_app = None
 
 
 def create_api(app_name, rest_args=None, database=None, db_config=None, log_config=None, flask_config=None, oauth_args=None):
@@ -31,7 +31,7 @@ def create_api(app_name, rest_args=None, database=None, db_config=None, log_conf
                    keys are selected based on oauth_provider.py (TODO: set arg signature!)
     '''
 
-    global flask, api, db, SQLALCHEMY_DATABASE_URI
+    global flask_app, api, SQLALCHEMY_DATABASE_URI
 
     if flask_config is None:
         flask_config = {}
@@ -40,34 +40,36 @@ def create_api(app_name, rest_args=None, database=None, db_config=None, log_conf
     if not rest_args:
         rest_args = {}
 
-    flask = Flask(app_name)
+    flask_app = Flask(app_name)
     if flask_config:
-        flask.config.update(flask_config)
+        flask_app.config.update(flask_config)
     # only import the API class needed, to avoid oauth deps
     if isinstance(oauth_args, dict):
         rest_args['oauth_args'] = oauth_args
         from hoops.restful import OAuthAPI
-        api = OAuthAPI(flask, **rest_args)
+        api = OAuthAPI(flask_app, **rest_args)
     else:
         from hoops.restful import API
-        api = API(flask, **rest_args)
-    babel = Babel(flask)
-    # prep the database if needed; not all RESTFul APIs will have a database associated with it
-    if database is not None and isinstance(db_config, dict):
-        db = database
-        SQLALCHEMY_DATABASE_URI = 'mysql://%(username)s:%(password)s@%(hostname)s/%(database)s?charset=utf8' % db_config
-        flask.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
-        db.init_app(flask)
-        flask.db = db
+        api = API(flask_app, **rest_args)
+    babel = Babel(flask_app)
     # setup logging
-    if flask.config.get('DEBUG'):
+    if flask_app.config.get('DEBUG'):
         log_level = 'DEBUG'
     else:
         log_level = 'WARNING'
     configure_logging(app_name, logging_config=log_config, log_level=log_level)
+    # prep the database if needed; not all RESTFul APIs will have a database associated with it
+    if database is not None and isinstance(db_config, dict):
+        SQLALCHEMY_DATABASE_URI = 'mysql://%(username)s:%(password)s@%(hostname)s/%(database)s?charset=utf8' % db_config
+        flask_app.config['SQLALCHEMY_DATABASE_URI'] = SQLALCHEMY_DATABASE_URI
+        database.init_app(flask_app)
+        flask_app.db = database
     # locate and register all of the views we can find
-    [api.register(sub) for sub in find_subclasses(APIResource)]
-    return flask, db, api
+    for api_resource in find_subclasses(APIResource):
+        if flask_app.config['DEBUG']:
+            print "Adding route %s" % api_resource
+        api.register(api_resource)
+    return flask_app, database, api
 
 
 def load_config_file(config_file, environment):

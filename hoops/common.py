@@ -2,15 +2,9 @@ import re
 import datetime
 
 from coaster.sqlalchemy import BaseMixin
-from sqlalchemy import event
+from flask.ext.sqlalchemy import SQLAlchemy
 from passlib.hash import sha512_crypt
-
-from hoops.core import db
-from hoops.utils import (
-    ActiveQuery,
-    ActiveOrSuspendedQuery,
-    NotSuspendedQuery
-)
+from sqlalchemy import event
 
 
 class Slugify:
@@ -91,7 +85,7 @@ class HashUtils(object):
         return sha512_crypt.verify(string_value, hash_value)
 
 
-class BaseModel(BaseMixin):
+class BareModel(object):
     """ Abstract class based which should be used to define other
     models. This will contain the common implementation details for those
     classes.
@@ -119,7 +113,7 @@ class BaseModel(BaseMixin):
         ) for field in self.__repr_fields__])
 
     def to_json(self, include_subordinate=()):
-        db.session.refresh(self)
+        #db.session.refresh(self)
         value = self._sa_instance_state.dict
         return_value = {}
         props = value.keys()
@@ -162,7 +156,7 @@ class BaseModel(BaseMixin):
         return cls.query.filter_by(**kwargs).one()
 
 
-class SluggableModel(BaseModel, Slugify):
+class SluggableModel(BareModel, Slugify):
     """ Model class which extends the Slugify behavior to BaseModel class. All
     models which require slug generation feature should inherit from this model.
     """
@@ -172,7 +166,7 @@ class SluggableModel(BaseModel, Slugify):
 event.listen(SluggableModel, 'before_insert', Slugify.slugify_before_insert_listener, propagate=True)
 
 
-class HashableModel(BaseModel, HashedPasswordMixin):
+class HashableModel(BareModel, HashedPasswordMixin):
     """ Model class which extends the HashedPasswordMixin behavior to BaseModel class. All
     models which require password hashing feature should inherit from this model.
     """

@@ -18,6 +18,7 @@ DEFAULT_PORT = 8000  # starting port number
 class HoopsSubParser(object):
     branch = None   # must be set for sub-branches!
     help = 'Sub-parser description'
+    no_views = False
 
     def __init__(self, subparser):
         if self.branch is None:
@@ -33,6 +34,7 @@ class HoopsDbSubParser(HoopsSubParser):
     branch = 'db'
     help = 'Database manipulation'
     db_actions = ['manage', 'recreate']  # TODO: populate
+    no_views = True
 
     def __init__(self, subparser):
         super(HoopsDbSubParser, self).__init__(subparser)
@@ -61,16 +63,16 @@ class HoopsRunSubParser(HoopsSubParser):
     def __init__(self, subparser):
         super(HoopsRunSubParser, self).__init__(subparser)
         subparser.add_argument(
-            "--app", required=True,
-            help="Application to run API configuration file"
+            "--app",
+            help="Application to run API configuration file. Defaults to the first app defined."
         )
         subparser.add_argument(
             "--host", default=DEFAULT_HOST,
-            help="Hostname to run development mode server on"
+            help="Hostname to run development mode server on."
         )
         subparser.add_argument(
             "--port", default=DEFAULT_PORT,
-            help="Port to run development mode server on"
+            help="Port to run development mode server on."
         )
 
     def invoke(self, options, flask_app, db):
@@ -117,7 +119,8 @@ class HoopsApi(object):
         else:
             options = self.parser.parse_args(args)
         self.options = options
-        self._init_app()
+        no_views = self.sub_parsers[self.options.branch].no_views
+        self._init_app(no_views=no_views)
         return options
 
     def process_options(self):
@@ -128,7 +131,7 @@ class HoopsApi(object):
             self.db
         )
 
-    def _init_app(self, app_slug=None, options=None):
+    def _init_app(self, app_slug=None, options=None, no_views=False):
         # regardless of the action, we need an app created
         if options is None:
             options = self.options

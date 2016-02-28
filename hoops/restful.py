@@ -6,7 +6,6 @@ from copy import deepcopy
 from flask.ext import restful
 from flask import make_response, request, Markup, g, current_app
 from werkzeug.exceptions import HTTPException
-import elementtree.ElementTree as etree
 
 from hoops.status import library as status_library
 from hoops.response import APIResponse
@@ -39,8 +38,8 @@ class API(restful.Api):
     def __init__(self, *args, **kwargs):
         super(API, self).__init__(*args, **kwargs)
         self.representations = {
-            'application/xml': output_xml,
-            'text/xml': output_xml,
+            #'application/xml': output_xml,
+            #'text/xml': output_xml,
             'application/json': output_json,
         }
 
@@ -171,48 +170,48 @@ def output_json(data, code, headers=None):
     return resp
 
 
-def output_xml(data, code, headers=None):
-    """Makes a Flask response with a XML encoded body"""
-    out, code = prepare_output(data, code, headers)
-    resp = xmlify(out)
-    resp.code = code
-    resp.headers.extend(headers or {})
-
-    return resp
-
-
-def xmlify(output):
-    """
-    xmlfy takes a dictionary and converts it to xml.
-    """
-    XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>'
-    nodes = serialize({'jetlaunch': output})
-
-    r = make_response(Markup(XML_DECLARATION + ''.join(etree.tostring(node) for node in nodes)))
-    r.mimetype = 'text/xml'
-
-    return r
-
-
-def serialize(root):
-    node = None
-    node_stack = []
-    for key in root.keys():
-        node = etree.Element(key)
-        if isinstance(root[key], dict):
-            inner_node_stack = serialize(root[key])
-            for inner_node in inner_node_stack:
-                node.append(inner_node)
-        elif isinstance(root[key], list):
-            for item in root[key]:
-                itemnode = etree.Element('item')   # magic string
-                inner_node_stack = serialize(item)
-                for inner_node in inner_node_stack:
-                    itemnode.append(inner_node)
-                node.append(itemnode)
-        else:
-            if root[key] is not None:
-                node.text = unicode(root[key])
-        node_stack.append(node)
-
-    return node_stack
+#def output_xml(data, code, headers=None):
+#    """Makes a Flask response with a XML encoded body"""
+#    out, code = prepare_output(data, code, headers)
+#    resp = xmlify(out)
+#    resp.code = code
+#    resp.headers.extend(headers or {})
+#
+#    return resp
+#
+#
+#def xmlify(output):
+#    """
+#    xmlfy takes a dictionary and converts it to xml.
+#    """
+#    XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>'
+#    nodes = serialize_xml({'jetlaunch': output})
+#
+#    r = make_response(Markup(XML_DECLARATION + ''.join(etree.tostring(node) for node in nodes)))
+#    r.mimetype = 'text/xml'
+#
+#    return r
+#
+#
+#def serialize_xml(root):
+#    node = None
+#    node_stack = []
+#    for key in root.keys():
+#        node = etree.Element(key)
+#        if isinstance(root[key], dict):
+#            inner_node_stack = serialize(root[key])
+#            for inner_node in inner_node_stack:
+#                node.append(inner_node)
+#        elif isinstance(root[key], list):
+#            for item in root[key]:
+#                itemnode = etree.Element('item')   # magic string
+#                inner_node_stack = serialize(item)
+#                for inner_node in inner_node_stack:
+#                    itemnode.append(inner_node)
+#                node.append(itemnode)
+#        else:
+#            if root[key] is not None:
+#                node.text = unicode(root[key])
+#        node_stack.append(node)
+#
+#    return node_stack

@@ -15,8 +15,8 @@ from sqlalchemy.schema import (
 
 
 class DBManager(object):
-    def __init__(self, database, alembic_ini_path=None):
-        self.db = database
+    def __init__(self, db, alembic_ini_path=None):
+        self.db = db
         if alembic_ini_path:
             from alembic.config import Config as AlembicConfig
             self.alembic_cfg = AlembicConfig(alembic_ini_path)
@@ -29,7 +29,11 @@ class DBManager(object):
         based on models implemented
         """
         self.drop_tables()
+        if not self.db.metadata.tables:
+            raise Exception("Database linkage error; no tables found")
         self.db.create_all()
+        print "Recreated database tables: %s" % \
+            (', '.join(self.db.metadata.tables.keys()))
         if self.alembic_cfg:
             from alembic.config import command
             # generate the version table, "stamping" it with the most recent rev:

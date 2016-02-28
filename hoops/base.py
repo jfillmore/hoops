@@ -155,6 +155,18 @@ class APIResource(Resource):
     remove = UnimplementedOperation()
     list = UnimplementedOperation()
 
+    #def __repr__(self):
+    #    methods = ['create', 'retrieve', 'update', 'remove', 'list']
+    #    noop = UnimplementedOperation()
+    #    return "<%s [%s: %s]>" % (
+    #        self.__cls__.__name__,
+    #        self.route,
+    #        ', '.join([
+    #            method for method in methods
+    #            if getattr(self, method) is not noop
+    #        ])
+    #    )
+
     @classmethod
     def get_parameters(cls):
 

@@ -2,7 +2,7 @@
 *.py[cod]
 *.log
 dist/
-hoops.egg-info/
+*.egg-info/
 .idea/
 .coverage
 *.sw?

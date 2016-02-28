@@ -17,30 +17,6 @@ class OutputFormat:
     XML = 'xml'
 
 
-class ActiveQuery(object):
-    """Returns a query handle filtered to just active objects"""
-    def __get__(self, instance, owner):
-        return owner._apply_active_filter(owner.query)
-
-
-class ActiveOrSuspendedQuery(object):
-    """Returns a query handle filtered to just active or suspended objects"""
-    def __get__(self, instance, owner):
-        if hasattr(owner, 'status'):
-            return owner.query.filter(owner.status.in_(('suspended', 'active',)))
-        else:
-            return owner.query_active
-
-
-class NotSuspendedQuery(object):
-    """Returns a query handle filtered to everything but suspended objects"""
-    def __get__(self, instance, owner):
-        if hasattr(owner, 'status'):
-            return owner.query.filter(owner.status.notin_(('suspended',)))
-        else:
-            return owner.query_active
-
-
 class TestUtilities(object):
 
     @classmethod
